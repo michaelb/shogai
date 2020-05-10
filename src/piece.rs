@@ -1,3 +1,5 @@
+use crate::position::Position;
+
 pub struct Piece {
     color: Color,
     piecetype: PieceType,
