@@ -1,6 +1,8 @@
+mod board;
 mod piece;
 mod position;
 
 fn main() {
-    println!("Hello, world!");
+    let b = board::Board::new();
+    println!("{}", b);
 }
