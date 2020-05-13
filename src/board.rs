@@ -13,7 +13,7 @@ impl std::fmt::Display for Board {
         for line in (0..9) {
             write!(f, "|")?;
             for column in (0..9) {
-                if let Some(p) = self.is_occupied_by(Position(line * 9 + column)) {
+                if let Some(p) = self.is_occupied_by(Position(line * 9 + (8 - column))) {
                     write!(f, "{}", p)?;
                 } else {
                     write!(f, "  ")?;
@@ -46,27 +46,116 @@ impl Board {
         self.piece_set.push(piece);
     }
 
-    pub fn new<'a>() -> Board {
-        let mut b = Board::empty();
+    ///return the list of the piece
+    pub fn export(&self) -> Vec<Piece> {
+        return self.piece_set.clone();
+    }
+
+    pub fn flip(&mut self) {
+        let mut tmp: Vec<Piece> = Vec::new();
+        for (i, piece) in self.piece_set.iter().enumerate() {
+            let pos = piece.position;
+            if let Some(x) = pos {
+                let i = x.0 % 9;
+                let j = x.0 / 9;
+                let new_x = (8 - j) * 9 + (8 - i);
+                tmp.push(Piece {
+                    color: piece.color,
+                    piecetype: piece.piecetype,
+                    promoted: piece.promoted,
+                    position: Some(Position(new_x)),
+                });
+            }
+        }
+        self.piece_set = tmp;
+    }
+
+    fn set(&mut self, col: Color) {
         for i in (18..27) {
             let p = Piece {
-                color: Color::Black,
+                color: col,
                 piecetype: PieceType::Pawn,
                 promoted: false,
                 position: Some(Position(i)),
             };
-            b.add_piece(p);
+            self.add_piece(p);
         }
-        for i in (54..63) {
-            let p = Piece {
-                color: Color::Black,
-                piecetype: PieceType::Pawn,
-                promoted: false,
-                position: Some(Position(i)),
-            };
-            b.add_piece(p);
-        }
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Lance,
+            promoted: false,
+            position: Some(Position(0)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Lance,
+            promoted: false,
+            position: Some(Position(8)),
+        });
 
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Knight,
+            promoted: false,
+            position: Some(Position(1)),
+        });
+
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Knight,
+            promoted: false,
+            position: Some(Position(7)),
+        });
+
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Silver,
+            promoted: false,
+            position: Some(Position(2)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Silver,
+            promoted: false,
+            position: Some(Position(6)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Gold,
+            promoted: false,
+            position: Some(Position(3)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Gold,
+            promoted: false,
+            position: Some(Position(5)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::King,
+            promoted: false,
+            position: Some(Position(4)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Rook,
+            promoted: false,
+            position: Some(Position(16)),
+        });
+        self.add_piece(Piece {
+            color: col,
+            piecetype: PieceType::Bishop,
+            promoted: false,
+            position: Some(Position(10)),
+        });
+    }
+
+    pub fn new<'a>() -> Board {
+        let mut b = Board::empty();
+        b.set(Color::Black);
+        b.flip();
+        b.set(Color::White);
         b
     }
 }

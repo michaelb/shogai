@@ -49,13 +49,14 @@ impl Piece {
 impl std::fmt::Display for Piece {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let symbol = match &self.piecetype {
-            Pawn => "P",
-            Rook => "R",
-            Bishop => "B",
-            Gold => "G",
-            Silver => "S",
-            Knight => "N",
-            Lance => "L",
+            PieceType::Rook => "R",
+            PieceType::Pawn => "P",
+            PieceType::Bishop => "B",
+            PieceType::Gold => "G",
+            PieceType::Silver => "S",
+            PieceType::Knight => "N",
+            PieceType::Lance => "L",
+            PieceType::King => "K",
         };
         if self.promoted {
             write!(f, "+{}", symbol);
