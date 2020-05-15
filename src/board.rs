@@ -51,6 +51,8 @@ impl Board {
         return self.piece_set.clone();
     }
 
+    ///a simple reverse is not enough since
+    ///a central symmetry is needed
     pub fn flip(&mut self) {
         let mut tmp: Vec<Piece> = Vec::new();
         for (i, piece) in self.piece_set.iter().enumerate() {
