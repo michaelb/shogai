@@ -1,20 +1,42 @@
+use crate::piece::*;
 use crate::position::*;
+use std::fmt;
 
 use std::str::FromStr;
+/// respect the standard notation, found at https://en.wikipedia.org/wiki/Shogi_notation#Piece
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Movement {
-    pub start: Position,
+    pub piecetype: PieceType,
+    pub start: Option<Position>,
     pub end: Position,
     pub promotion: bool,
 }
 
-impl ToString for Movement {
-    fn to_string(&self) -> String {
-        let mv = [self.start.to_string(), self.end.to_string()].join("-");
-        if self.promotion {
-            [mv, "+".to_string()].join("")
+impl fmt::Display for Movement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.start == None {
+            //is a drop move
+            write!(
+                f,
+                "{}",
+                [
+                    self.piecetype.to_string(),
+                    String::from("*"),
+                    self.end.to_string()
+                ]
+                .join("")
+            )
         } else {
-            mv
+            let mv = [self.start.unwrap().to_string(), self.end.to_string()].join("-");
+            if self.promotion {
+                write!(
+                    f,
+                    "{}",
+                    [self.piecetype.to_string(), mv, "+".to_string()].join("")
+                )
+            } else {
+                write!(f, "{}", [self.piecetype.to_string(), mv].join(""))
+            }
         }
     }
 }
@@ -24,7 +46,10 @@ impl FromStr for Movement {
     type Err = String;
     fn from_str(s: &str) -> Result<Movement, String> {
         let mut pr = false;
-        let mut fs: Vec<char> = s.chars().filter(|&c| !(c >= 'A' && c <= 'Z')).collect();
+        let mut fs: Vec<char> = s
+            .chars()
+            .filter(|&c| !(c >= 'A' && c <= 'Z') && c != '-')
+            .collect();
         if *fs.last().unwrap() == '+' {
             pr = true;
             fs.pop();
@@ -33,8 +58,11 @@ impl FromStr for Movement {
         let s2: String = fs[2..4].iter().collect();
         let p1: Position = s1.parse().unwrap();
         let p2: Position = s2.parse().unwrap();
+
+        let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
         Ok(Movement {
-            start: p1,
+            piecetype: piecetype,
+            start: Some(p1),
             end: p2,
             promotion: pr,
         })
@@ -48,10 +76,11 @@ mod test {
     #[test]
     fn convertmoves() {
         for &pr in &[true, false] {
-            for start in (0..80) {
-                for end in (0..80) {
+            for start in 0..80 {
+                for end in 0..80 {
                     let mv = Movement {
-                        start: Position(start),
+                        piecetype: PieceType::Pawn,
+                        start: Some(Position(start)),
                         end: Position(end),
                         promotion: pr,
                     };

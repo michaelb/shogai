@@ -10,16 +10,16 @@ impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, " 9 8 7 6 5 4 3 2 1 \n")?;
         write!(f, "+------------------+\n")?;
-        for line in (0..9) {
+        for line in 0..9 {
             write!(f, "|")?;
-            for column in (0..9) {
+            for column in 0..9 {
                 if let Some(p) = self.is_occupied_by(Position(line * 9 + (8 - column))) {
                     write!(f, "{}", p)?;
                 } else {
                     write!(f, "  ")?;
                 }
             }
-            write!(f, "|\n");
+            write!(f, "|\n")?;
         }
         write!(f, "+------------------+\n")?;
         Ok(())
@@ -55,7 +55,7 @@ impl Board {
     ///a central symmetry is needed
     pub fn flip(&mut self) {
         let mut tmp: Vec<Piece> = Vec::new();
-        for (i, piece) in self.piece_set.iter().enumerate() {
+        for piece in self.piece_set.iter() {
             let pos = piece.position;
             if let Some(x) = pos {
                 let i = x.0 % 9;
@@ -73,7 +73,7 @@ impl Board {
     }
 
     fn set(&mut self, col: Color) {
-        for i in (18..27) {
+        for i in 18..27 {
             let p = Piece {
                 color: col,
                 piecetype: PieceType::Pawn,

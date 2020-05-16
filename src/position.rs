@@ -44,7 +44,7 @@ mod test {
 
     #[test]
     fn convertback() {
-        for i in (0..80) {
+        for i in 0..80 {
             let p0 = Position(i);
             let p0ts = p0.to_string();
             let p1: Position = Position::from_str(&p0ts).unwrap();
