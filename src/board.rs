@@ -1,7 +1,8 @@
+use crate::movement::*;
 use crate::piece::*;
 use crate::position::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Board {
     piece_set: Vec<Piece>,
 }
@@ -31,6 +32,13 @@ impl Board {
         Board {
             piece_set: Vec::new(),
         }
+    }
+    fn play_move(&self, mv: &str) -> Board {
+        self.clone()
+    }
+
+    fn check_move(&self, mv: &str) -> bool {
+        false
     }
 
     fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
