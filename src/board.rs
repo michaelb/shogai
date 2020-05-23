@@ -5,6 +5,7 @@ use crate::position::*;
 #[derive(Debug, Clone)]
 pub struct Board {
     piece_set: Vec<Piece>,
+    turn: Color,
 }
 
 impl std::fmt::Display for Board {
@@ -31,17 +32,38 @@ impl Board {
     fn empty() -> Self {
         Board {
             piece_set: Vec::new(),
+            turn: Color::White,
         }
     }
-    fn play_move(&self, mv: &str) -> Board {
-        self.clone()
+    pub fn play_move(&self, mv: &str) -> Board {
+        if !self.check_move(mv) {
+            //move not valid
+            panic!("invalid movement");
+        }
+        let mut new_board = self.clone();
+        let movement: Movement = mv.parse().unwrap();
+
+        //movement was checked so it's ok to just play
+        if let Some(pos) = movement.start {
+            // TODO
+            // the movement is moving a piece
+        } else {
+            // the movement is a drop
+            new_board.piece_set.push(Piece {
+                color: self.turn,
+                piecetype: movement.piecetype,
+                promoted: false,
+                position: Some(movement.end),
+            });
+        }
+        new_board
     }
 
-    fn check_move(&self, mv: &str) -> bool {
+    pub fn check_move(&self, mv: &str) -> bool {
         false
     }
 
-    fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
+    pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
         for &p in self.piece_set.iter() {
             if p.position == Some(pos) {
                 return Some(p);
