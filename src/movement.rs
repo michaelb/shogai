@@ -45,27 +45,40 @@ impl FromStr for Movement {
     // probably panic if given a wrong format
     type Err = String;
     fn from_str(s: &str) -> Result<Movement, String> {
+        let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
         let mut pr = false;
         let mut fs: Vec<char> = s
             .chars()
-            .filter(|&c| !(c >= 'A' && c <= 'Z') && c != '-')
+            .filter(|&c| !(c >= 'A' && c <= 'Z') && c != '-' && c != 'x')
             .collect();
-        if *fs.last().unwrap() == '+' {
-            pr = true;
-            fs.pop();
-        }
-        let s1: String = fs[0..2].iter().collect();
-        let s2: String = fs[2..4].iter().collect();
-        let p1: Position = s1.parse().unwrap();
-        let p2: Position = s2.parse().unwrap();
+        // moving a piece across the board
+        if fs[0] != '*' {
+            if *fs.last().unwrap() == '+' {
+                pr = true;
+            }
 
-        let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
-        Ok(Movement {
-            piecetype: piecetype,
-            start: Some(p1),
-            end: p2,
-            promotion: pr,
-        })
+            let s1: String = fs[0..2].iter().collect();
+            let s2: String = fs[2..4].iter().collect();
+            let p1: Position = s1.parse().unwrap();
+            let p2: Position = s2.parse().unwrap();
+
+            Ok(Movement {
+                piecetype: piecetype,
+                start: Some(p1),
+                end: p2,
+                promotion: pr,
+            })
+        } else {
+            // drop movement
+            let s1: String = fs[1..3].iter().collect();
+            let p1: Position = s1.parse().unwrap();
+            Ok(Movement {
+                piecetype: piecetype,
+                start: None,
+                end: p1,
+                promotion: pr,
+            })
+        }
     }
 }
 

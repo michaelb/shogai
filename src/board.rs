@@ -45,8 +45,7 @@ impl Board {
 
         //movement was checked so it's ok to just play
         if let Some(pos) = movement.start {
-            // TODO
-            // the movement is moving a piece
+            // TODO the movement is moving a piece
         } else {
             // the movement is a drop
             new_board.piece_set.push(Piece {
@@ -55,6 +54,16 @@ impl Board {
                 promoted: false,
                 position: Some(movement.end),
             });
+
+            //remove the piece that was dropped
+            let index = new_board
+                .piece_set
+                .iter()
+                .enumerate()
+                .find(|(_, piece)| piece.piecetype == movement.piecetype)
+                .unwrap()
+                .0;
+            new_board.piece_set.remove(index);
         }
         new_board
     }

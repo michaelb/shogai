@@ -7,7 +7,7 @@ pub struct Piece {
     pub color: Color,
     pub piecetype: PieceType,
     pub promoted: bool,
-    pub position: Option<Position>,
+    pub position: Option<Position>, // if a piece is not on the board, it can NOT be promoted
 }
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
