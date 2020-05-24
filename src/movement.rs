@@ -3,7 +3,19 @@ use crate::position::*;
 use std::fmt;
 
 use std::str::FromStr;
-/// respect the standard notation, found at https://en.wikipedia.org/wiki/Shogi_notation#Piece
+///!respect the standard notation, found at https://en.wikipedia.org/wiki/Shogi_notation#Piece
+///!(see: Western notation)
+///!However, origin must always be written!
+///! Examples:
+///!Moving a pawn for square 1g to square 1f is written "P1g-1f"
+///!If a opponent's piece is taken, the move can be written as P1gx1f. This will ensure an extra
+///!check to make sure there is a opponent piece there
+///!If the piece is to be promoted, the move should be written "P4d-4c+" ('+' at the en of the move)
+///!The promotion status may be provided anytime but will trigger the check if promotion is
+///!requested but the piece does not fulfill conditions to be promoted, or if promotion is
+///!mandatory but the promotion was not requested
+///! No extra + must be provided to move a promoted pawn after the promotion
+///!An example of a drop is written "P*3e"*/
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Movement {
     pub piecetype: PieceType,
@@ -47,7 +59,7 @@ impl FromStr for Movement {
     fn from_str(s: &str) -> Result<Movement, String> {
         let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
         let mut pr = false;
-        let mut fs: Vec<char> = s
+        let fs: Vec<char> = s
             .chars()
             .filter(|&c| !(c >= 'A' && c <= 'Z') && c != '-' && c != 'x')
             .collect();
@@ -103,5 +115,13 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn testdrop() {
+        let s = "P*8f".to_string();
+        let mv = s.clone().parse::<Movement>().unwrap();
+        let s2 = mv.to_string();
+        assert_eq!(s, s2);
     }
 }
