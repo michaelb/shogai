@@ -14,8 +14,9 @@ use std::str::FromStr;
 ///!The promotion status may be provided anytime but will trigger the check if promotion is
 ///!requested but the piece does not fulfill conditions to be promoted, or if promotion is
 ///!mandatory but the promotion was not requested
-///! No extra + must be provided to move a promoted pawn after the promotion
-///!An example of a drop is written "P*3e"*/
+///! No extra + must be provided to move a promoted pawn after the promotion. No extra '=' must
+///!(though it can) be provided if the piece can be promoted but the player choose not to
+///!An example of a drop is written "P*3e"
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Movement {
     pub piecetype: PieceType,
