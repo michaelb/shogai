@@ -2,7 +2,7 @@ use crate::movement::*;
 use crate::piece::*;
 use crate::position::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     piece_set: Vec<Piece>,
     turn: Color,
@@ -29,10 +29,24 @@ impl std::fmt::Display for Board {
 }
 
 impl Board {
-    fn empty() -> Self {
+    pub fn empty() -> Self {
         Board {
             piece_set: Vec::new(),
             turn: Color::White,
+        }
+    }
+
+    ///capture a piece if there, do nothing else
+    fn capture_piece(&mut self, p: Position) {
+        if let Some((index, _)) = self
+            .piece_set
+            .iter()
+            .enumerate()
+            .find(|(_, piece)| piece.position == Some(p))
+        {
+            self.piece_set[index].color.invert();
+            self.piece_set[index].position = None;
+            self.piece_set[index].promoted = false;
         }
     }
     pub fn play_move(&self, mv: &str) -> Board {
@@ -44,18 +58,22 @@ impl Board {
         let movement: Movement = mv.parse().unwrap();
 
         //movement was checked so it's ok to just play
-        if let Some(pos) = movement.start {
-            // TODO the movement is moving a piece
+        if movement.start != None {
+            //if a piece (an opponent's) is here at the destination, remove it, change its color,
+            new_board.capture_piece(movement.end);
+
+            //then move the piece
+            let index = new_board
+                .piece_set
+                .iter()
+                .enumerate()
+                .find(|(_, piece)| piece.position == movement.start)
+                .unwrap()
+                .0;
+            new_board.piece_set[index].position = Some(movement.end);
+            new_board.piece_set[index].promoted |= movement.promotion;
         } else {
             // the movement is a drop
-            new_board.piece_set.push(Piece {
-                color: self.turn,
-                piecetype: movement.piecetype,
-                promoted: false,
-                position: Some(movement.end),
-            });
-
-            //remove the piece that was dropped
             let index = new_board
                 .piece_set
                 .iter()
@@ -63,13 +81,14 @@ impl Board {
                 .find(|(_, piece)| piece.piecetype == movement.piecetype)
                 .unwrap()
                 .0;
-            new_board.piece_set.remove(index);
+            new_board.piece_set[index].position = Some(movement.end);
         }
+        new_board.turn.invert();
         new_board
     }
 
     pub fn check_move(&self, mv: &str) -> bool {
-        false
+        true
     }
 
     pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
@@ -81,7 +100,7 @@ impl Board {
         None
     }
 
-    fn add_piece(&mut self, piece: Piece) {
+    pub fn add_piece(&mut self, piece: Piece) {
         self.piece_set.push(piece);
     }
 
@@ -198,5 +217,63 @@ impl Board {
         b.flip();
         b.set(Color::White);
         b
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::board::*;
+    use crate::movement::*;
+    use crate::piece::*;
+    use crate::position::*;
+    #[test]
+    fn play_a_move() {
+        let mut b1 = Board::empty();
+        let p1: Position = "1f".parse().unwrap();
+        b1.add_piece(Piece {
+            color: Color::White,
+            piecetype: PieceType::Pawn,
+            promoted: false,
+            position: Some(p1),
+        });
+
+        let b3 = b1.play_move("R1f-1g+");
+
+        let mut b2 = Board::empty();
+        b2.turn.invert();
+        let p2: Position = "1g".parse().unwrap();
+        b2.add_piece(Piece {
+            color: Color::White,
+            piecetype: PieceType::Pawn,
+            promoted: true,
+            position: Some(p2),
+        });
+        assert_eq!(b2, b3);
+    }
+
+    #[test]
+    fn play_a_drop() {
+        let mut b1 = Board::empty();
+        b1.add_piece(Piece {
+            color: Color::White,
+            piecetype: PieceType::Pawn,
+            promoted: false,
+            position: None,
+        });
+
+        let b3 = b1.play_move("P*3e");
+
+        let mut b2 = Board::empty();
+        b2.turn.invert();
+        let p2: Position = "3e".parse().unwrap();
+        b2.add_piece(Piece {
+            color: Color::White,
+            piecetype: PieceType::Pawn,
+            promoted: false,
+            position: Some(p2),
+        });
+
+        assert_eq!(b2, b3);
     }
 }

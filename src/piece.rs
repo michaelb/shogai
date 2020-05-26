@@ -16,7 +16,7 @@ pub enum Color {
     White,
 }
 impl Color {
-    fn invert(&mut self) {
+    pub fn invert(&mut self) {
         if *self == Color::Black {
             *self = Color::White;
         } else {
