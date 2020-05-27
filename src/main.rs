@@ -1,4 +1,5 @@
 mod board;
+mod invalidmoveerror;
 mod movement;
 mod piece;
 mod position;

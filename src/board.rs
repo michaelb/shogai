@@ -1,3 +1,4 @@
+use crate::invalidmoveerror::*;
 use crate::movement::*;
 use crate::piece::*;
 use crate::position::*;
