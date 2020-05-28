@@ -51,15 +51,17 @@ impl Board {
         }
     }
     pub fn play_move(&self, mv: &str) -> Board {
-        if !self.check_move(mv) {
+        if let Err(e) = self.check_move(mv) {
             //move not valid
-            panic!("invalid movement");
+            panic!("Invalid movement : {}", e);
         }
         let mut new_board = self.clone();
         let movement: Movement = mv.parse().unwrap();
 
         //movement was checked so it's ok to just play
         if movement.start != None {
+            // the movement is a normal movement
+            //
             //if a piece (an opponent's) is here at the destination, remove it, change its color,
             new_board.capture_piece(movement.end);
 
@@ -88,8 +90,8 @@ impl Board {
         new_board
     }
 
-    pub fn check_move(&self, mv: &str) -> bool {
-        true
+    pub fn check_move<'a>(&self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
+        Ok(mv).and_then(check_syntax).and_then(check_in_board)
     }
 
     pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {

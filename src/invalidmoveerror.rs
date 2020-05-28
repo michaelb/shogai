@@ -1,3 +1,5 @@
+use crate::board::*;
+use crate::movement::*;
 use std::error;
 use std::fmt;
 
@@ -40,5 +42,67 @@ impl error::Error for InvalidMoveError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         // Generic error, underlying cause isn't tracked.
         None
+    }
+}
+
+fn maybe_drop(mv: &str) -> bool {
+    if mv.len() == 4 && mv.as_bytes()[1] == b'*' {
+        true
+    } else {
+        false
+    }
+}
+
+fn maybe_normal_move(mv: &str) -> bool {
+    if ((mv.len() == 7 && mv.as_bytes()[6] == b'+') || (mv.len() == 6))
+        && (mv.as_bytes()[3] == b'-' || mv.as_bytes()[3] == b'x')
+    {
+        true
+    } else {
+        false
+    }
+}
+
+pub fn check_syntax(mv: &str) -> Result<&str, InvalidMoveError> {
+    if !(maybe_drop(mv) || maybe_normal_move(mv)) {
+        return Err(InvalidMoveError::MoveSyntaxError);
+    }
+
+    let first_char = mv.chars().next().unwrap();
+    if first_char != 'P'
+        && first_char != 'K'
+        && first_char != 'R'
+        && first_char != 'B'
+        && first_char != 'G'
+        && first_char != 'S'
+        && first_char != 'N'
+        && first_char != 'L'
+    {
+        return Err(InvalidMoveError::MoveSyntaxError);
+    }
+
+    return Ok(mv);
+}
+
+/// Check if all the squares invloved fit into the shogiban
+pub fn check_in_board(mv: &str) -> Result<&str, InvalidMoveError> {
+    let mut in_board = true;
+    if maybe_drop(mv) {
+        in_board &= mv.as_bytes()[2] as char >= '1' && mv.as_bytes()[2] as char <= '9';
+        in_board &= mv.as_bytes()[3] as char >= 'a' && mv.as_bytes()[3] as char <= 'i';
+    }
+
+    if maybe_normal_move(mv) {
+        in_board &= mv.as_bytes()[1] as char >= '1' && mv.as_bytes()[1] as char <= '9';
+        in_board &= mv.as_bytes()[2] as char >= 'a' && mv.as_bytes()[2] as char <= 'i';
+
+        in_board &= mv.as_bytes()[4] as char >= '1' && mv.as_bytes()[4] as char <= '9';
+        in_board &= mv.as_bytes()[5] as char >= 'a' && mv.as_bytes()[5] as char <= 'i';
+    }
+
+    if in_board {
+        Ok(mv)
+    } else {
+        Err(InvalidMoveError::OutOfBoardMoveError)
     }
 }
