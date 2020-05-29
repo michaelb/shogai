@@ -4,9 +4,23 @@ use crate::piece::*;
 use crate::position::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rules {
+    pub can_uncover_check: bool,
+}
+
+impl Default for Rules {
+    fn default() -> Self {
+        Rules {
+            can_uncover_check: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     piece_set: Vec<Piece>,
     turn: Color,
+    pub rules: Rules,
 }
 
 impl std::fmt::Display for Board {
@@ -29,12 +43,24 @@ impl std::fmt::Display for Board {
     }
 }
 
+impl IntoIterator for Board {
+    type Item = Piece;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.piece_set.into_iter()
+    }
+}
+
 impl Board {
     pub fn empty() -> Self {
         Board {
             piece_set: Vec::new(),
             turn: Color::White,
+            rules: Rules::default(),
         }
+    }
+    pub fn get_color(&self) -> Color {
+        return self.turn;
     }
 
     ///capture a piece if there, do nothing else
@@ -91,7 +117,17 @@ impl Board {
     }
 
     pub fn check_move<'a>(&self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
-        Ok(mv).and_then(check_syntax).and_then(check_in_board)
+        Ok(mv)
+            .and_then(check_syntax)
+            .and_then(check_in_board)
+            .and_then(|mv| check_destination(mv, self.clone()))
+            .and_then(|mv| check_start(mv, self.clone()))
+            .and_then(|mv| check_possible_move(mv, self.clone()))
+            .and_then(|mv| check_nifu(mv, self.clone()))
+            .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
+            .and_then(|mv| check_mandatry_promotion(mv, self.clone()))
+            .and_then(|mv| check_uncover_check(mv, self.clone()))
+            .and_then(|mv| check_checkmate_by_pawn_drop(mv, self.clone()))
     }
 
     pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
@@ -114,7 +150,7 @@ impl Board {
 
     ///a simple reverse is not enough since
     ///a central symmetry is needed
-    pub fn flip(&mut self) {
+    fn flip(&mut self) {
         let mut tmp: Vec<Piece> = Vec::new();
         for piece in self.piece_set.iter() {
             let pos = piece.position;
@@ -241,7 +277,7 @@ mod test {
             position: Some(p1),
         });
 
-        let b3 = b1.play_move("R1f-1g+");
+        let b3 = b1.play_move("P1f-1g+");
 
         let mut b2 = Board::empty();
         b2.turn.invert();

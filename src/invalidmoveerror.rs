@@ -1,9 +1,9 @@
 use crate::board::*;
 use crate::movement::*;
+use crate::piece::*;
+use crate::position::*;
 use std::error;
 use std::fmt;
-
-// type Result<T> = std::result::Result<T, InvalidMoveError>;
 
 #[derive(Debug, Clone)]
 pub enum InvalidMoveError {
@@ -19,20 +19,22 @@ pub enum InvalidMoveError {
     UncoverCheckError,
     CheckmateByPawnDropError,
 }
+#[allow(non_snake_case)]
+#[allow(unused_variables)]
 impl fmt::Display for InvalidMoveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            MoveSyntaxError => write!(f,"Move has an incorrect syntax"),
-            OutOfBoardMoveError => write!(f,"The move uses squares outside of the board"),
-            DestinationOccupiedError => write!(f,"The destination square is occupied"),
-            NoPieceAtPositionError => write!(f,"No piece was found at the start location"),
-            NoPieceCapturedError => write!(f,"Capture was indicated but no piece was captured"),
-            PieceHasNoSuchMoveError => write!(f,"The piece cannot move in such a way"),
-            NifuViolationError => write!(f,"A pawn was dropped in a column already occupied by a non-promoted pawn"),
-            NoMovePossibleAfterDropError => write!(f,"The piece was dropped in a position but will never be able to move afterwards"),
-            MandatoryPromotionError => write!(f,"The promotion of the piece is mandatory at this position but move do not provide it"),
-            UncoverCheckError => write!(f,"The move uncovers the king"),
-            CheckmateByPawnDropError => write!(f,"A checkmate cannot be given by dropping a pawn")
+            InvalidMoveError::MoveSyntaxError => write!(f,"Move has an incorrect syntax"),
+            InvalidMoveError::OutOfBoardMoveError => write!(f,"The move uses squares outside of the board"),
+            InvalidMoveError::DestinationOccupiedError => write!(f,"The destination square is occupied"),
+            InvalidMoveError::NoPieceAtPositionError => write!(f,"No (such) piece was found at the start location"),
+            InvalidMoveError::NoPieceCapturedError => write!(f,"Capture was indicated but no piece was captured"),
+            InvalidMoveError::PieceHasNoSuchMoveError => write!(f,"The piece cannot move in such a way"),
+            InvalidMoveError::NifuViolationError => write!(f,"A pawn was dropped in a column already occupied by a non-promoted pawn"),
+            InvalidMoveError::NoMovePossibleAfterDropError => write!(f,"The piece was dropped in a position but will never be able to move afterwards"),
+            InvalidMoveError::MandatoryPromotionError => write!(f,"The promotion of the piece is mandatory at this position but move do not provide it"),
+            InvalidMoveError::UncoverCheckError => write!(f,"The move uncovers the king"),
+            InvalidMoveError::CheckmateByPawnDropError => write!(f,"A checkmate cannot be given by dropping a pawn")
         }
     }
 }
@@ -105,4 +107,108 @@ pub fn check_in_board(mv: &str) -> Result<&str, InvalidMoveError> {
     } else {
         Err(InvalidMoveError::OutOfBoardMoveError)
     }
+}
+
+fn check_position(p: Position, b: Board) -> Option<Piece> {
+    b.into_iter().find(|piece| piece.position == Some(p))
+}
+
+///check if destination is not occupied (or occupied by opponent)
+pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    let full_move: Movement = mv.parse().unwrap();
+
+    let destination = full_move.end;
+
+    if full_move.start == None {
+        //the move is a drop
+        if None == check_position(destination, b) {
+            //ok the destination is empty
+            return Ok(mv);
+        } else {
+            return Err(InvalidMoveError::DestinationOccupiedError);
+        }
+    } else {
+        //the move is a normal move
+        let current_player_color = b.get_color();
+        if full_move.force_capture {
+            // check there is an opponent piece there
+            if let Some(p) = check_position(destination, b) {
+                if p.color != current_player_color {
+                    return Ok(mv);
+                }
+            }
+            return Err(InvalidMoveError::NoPieceCapturedError);
+        } else {
+            //check if there is not one's own piece already there
+            if let Some(p) = check_position(destination, b) {
+                if p.color == current_player_color {
+                    return Err(InvalidMoveError::NoPieceCapturedError);
+                }
+            }
+            return Ok(mv);
+        }
+    }
+}
+
+pub fn check_start(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    let full_move: Movement = mv.parse().unwrap();
+    if b.into_iter()
+        .find(|p| p.position == full_move.start && p.piecetype == full_move.piecetype)
+        == None
+    {
+        //no such piece at given start position
+        return Err(InvalidMoveError::NoPieceAtPositionError);
+    }
+    return Ok(mv);
+}
+
+pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    Ok(mv)
+    //Err(InvalidMoveError::PieceHasNoSuchMove)
+    //TODO
+}
+
+pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    let full_move: Movement = mv.parse().unwrap();
+    if full_move.piecetype != PieceType::Pawn || full_move.start != None {
+        //not a pawn, not a drop
+        return Ok(mv);
+    }
+    if let Some(_) = b.into_iter().filter(|p| p.position != None).find(|p| {
+        p.piecetype == PieceType::Pawn && p.position.unwrap().0 % 9 == full_move.end.0 % 9
+    }) {
+        //two pawn on same column
+        return Err(InvalidMoveError::NifuViolationError);
+    }
+    return Ok(mv);
+}
+
+pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    Ok(mv)
+    //Err(InvalidMoveError::NoMovePossibleAfterDropError)
+    //TODO
+}
+
+pub fn check_mandatry_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    Ok(mv)
+    //Err(InvalidMoveError::MandatoryPromotionError);
+    //TODO
+}
+
+pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    if b.rules.can_uncover_check {
+        return Ok(mv);
+    }
+
+    //implement real mechanic here
+
+    return Ok(mv);
+    //Err(InvalidMoveError::UncoverCheckError)
+    //TODO
+}
+
+pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    Ok(mv)
+    //Err(InvalidMoveError::CheckmateByPawnDropError)
+    //TODO
 }

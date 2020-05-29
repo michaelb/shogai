@@ -1,3 +1,4 @@
+use crate::invalidmoveerror::*;
 use crate::piece::*;
 use crate::position::*;
 use std::fmt;
@@ -23,6 +24,7 @@ pub struct Movement {
     pub start: Option<Position>,
     pub end: Position,
     pub promotion: bool,
+    pub force_capture: bool,
 }
 
 impl fmt::Display for Movement {
@@ -40,7 +42,11 @@ impl fmt::Display for Movement {
                 .join("")
             )
         } else {
-            let mv = [self.start.unwrap().to_string(), self.end.to_string()].join("-");
+            let mut joiner = "-";
+            if self.force_capture {
+                joiner = "x";
+            }
+            let mv = [self.start.unwrap().to_string(), self.end.to_string()].join(joiner);
             if self.promotion {
                 write!(
                     f,
@@ -69,6 +75,11 @@ impl FromStr for Movement {
             if *fs.last().unwrap() == '+' {
                 pr = true;
             }
+            let fc = match s.as_bytes()[3] {
+                b'-' => false,
+                b'x' => true,
+                _ => panic!("{}", InvalidMoveError::MoveSyntaxError),
+            };
 
             let s1: String = fs[0..2].iter().collect();
             let s2: String = fs[2..4].iter().collect();
@@ -80,6 +91,7 @@ impl FromStr for Movement {
                 start: Some(p1),
                 end: p2,
                 promotion: pr,
+                force_capture: fc,
             })
         } else {
             // drop movement
@@ -90,6 +102,7 @@ impl FromStr for Movement {
                 start: None,
                 end: p1,
                 promotion: pr,
+                force_capture: false,
             })
         }
     }
@@ -109,6 +122,7 @@ mod test {
                         start: Some(Position(start)),
                         end: Position(end),
                         promotion: pr,
+                        force_capture: true,
                     };
 
                     let s = mv.clone().to_string();
