@@ -16,4 +16,7 @@ fn main() {
 
     println!("{}", b);
     println!("{}", b.play_move("P1f-1g"));
+
+    let b5 = board::Board::new();
+    println!("{}", b5);
 }

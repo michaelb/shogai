@@ -184,12 +184,36 @@ pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
 }
 
 pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
-    Ok(mv)
-    //Err(InvalidMoveError::NoMovePossibleAfterDropError)
-    //TODO
+    if !maybe_drop(mv) {
+        //move not a drop so no check
+        return Ok(mv);
+    }
+
+    let last_row;
+    let before_last_row;
+    if b.get_color() == Color::White {
+        last_row = 'i';
+        before_last_row = 'h';
+    } else {
+        last_row = 'a';
+        before_last_row = 'b';
+    }
+    let full_move: Movement = mv.parse().unwrap();
+
+    if full_move.piecetype == PieceType::Pawn && full_move.end.row() == last_row {
+        return Err(InvalidMoveError::NoMovePossibleAfterDropError);
+    } else if full_move.piecetype == PieceType::Lance && full_move.end.row() == last_row {
+        return Err(InvalidMoveError::NoMovePossibleAfterDropError);
+    } else if full_move.piecetype == PieceType::Knight
+        && (full_move.end.row() == last_row || full_move.end.row() == before_last_row)
+    {
+        return Err(InvalidMoveError::NoMovePossibleAfterDropError);
+    } else {
+        return Ok(mv);
+    }
 }
 
-pub fn check_mandatry_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_mandatory_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     Ok(mv)
     //Err(InvalidMoveError::MandatoryPromotionError);
     //TODO

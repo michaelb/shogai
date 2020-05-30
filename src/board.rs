@@ -3,7 +3,7 @@ use crate::movement::*;
 use crate::piece::*;
 use crate::position::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct Rules {
     pub can_uncover_check: bool,
 }
@@ -117,6 +117,7 @@ impl Board {
     }
 
     pub fn check_move<'a>(&self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
+        // checks should be performed in this order
         Ok(mv)
             .and_then(check_syntax)
             .and_then(check_in_board)
@@ -125,7 +126,7 @@ impl Board {
             .and_then(|mv| check_possible_move(mv, self.clone()))
             .and_then(|mv| check_nifu(mv, self.clone()))
             .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
-            .and_then(|mv| check_mandatry_promotion(mv, self.clone()))
+            .and_then(|mv| check_mandatory_promotion(mv, self.clone()))
             .and_then(|mv| check_uncover_check(mv, self.clone()))
             .and_then(|mv| check_checkmate_by_pawn_drop(mv, self.clone()))
     }
@@ -150,7 +151,7 @@ impl Board {
 
     ///a simple reverse is not enough since
     ///a central symmetry is needed
-    fn flip(&mut self) {
+    pub fn flip(&mut self) -> Self {
         let mut tmp: Vec<Piece> = Vec::new();
         for piece in self.piece_set.iter() {
             let pos = piece.position;
@@ -166,9 +167,14 @@ impl Board {
                 });
             }
         }
-        self.piece_set = tmp;
+        Board {
+            piece_set: tmp,
+            turn: self.turn,
+            rules: self.rules,
+        }
     }
 
+    ///set the regular starting position for one player
     fn set(&mut self, col: Color) {
         for i in 18..27 {
             let p = Piece {
@@ -252,10 +258,11 @@ impl Board {
 
     pub fn new<'a>() -> Board {
         let mut b = Board::empty();
-        b.set(Color::Black);
-        b.flip();
+        //white is always 'up' ( in the a-b-c rows)
         b.set(Color::White);
-        b
+        let mut b2 = b.flip();
+        b2.set(Color::Black);
+        b2
     }
 }
 

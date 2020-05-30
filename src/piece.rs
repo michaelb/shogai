@@ -82,16 +82,7 @@ impl FromStr for PieceType {
 
 impl fmt::Display for Piece {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let symbol = match &self.piecetype {
-            PieceType::Rook => "R",
-            PieceType::Pawn => "P",
-            PieceType::Bishop => "B",
-            PieceType::Gold => "G",
-            PieceType::Silver => "S",
-            PieceType::Knight => "N",
-            PieceType::Lance => "L",
-            PieceType::King => "K",
-        };
+        let symbol = &self.piecetype.to_string();
         if self.promoted {
             write!(f, "+{}", symbol)
         } else {

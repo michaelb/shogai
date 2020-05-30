@@ -4,6 +4,15 @@ use std::str::FromStr;
 pub struct Position(pub u16); //but must range between 0 and 80
                               //(81 position for 9*9 grid)
 
+impl Position {
+    pub fn row(&self) -> char {
+        return ((self.0 / 9) as u8 + 'a' as u8) as char;
+    }
+    pub fn column(&self) -> char {
+        return ((self.0 % 9) as u8 + 1 + '1' as u8) as char;
+    }
+}
+
 impl ToString for Position {
     fn to_string(&self) -> String {
         let x_axis = (self.0 % 9) + 1;
