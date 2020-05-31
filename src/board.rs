@@ -3,6 +3,8 @@ use crate::movement::*;
 use crate::piece::*;
 use crate::position::*;
 
+use std::iter::once;
+
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct Rules {
     pub can_uncover_check: bool,
@@ -264,6 +266,35 @@ impl Board {
         b2.set(Color::Black);
         b2
     }
+
+    pub fn iter_moves(&self) -> impl Iterator<Item = String> {
+        //all drops chain all moves filter check_move
+        let mut sol: Vec<String> = vec![];
+
+        //drop moves
+        for i in 0..80 {
+            for piece_to_drop in self.piece_set.iter().filter(|p| p.position == None) {
+                let mv = Movement {
+                    piecetype: piece_to_drop.piecetype,
+                    start: None,
+                    end: Position(i),
+                    promotion: false,
+                    force_capture: false,
+                };
+                sol.extend(once(mv.to_string()));
+            }
+        }
+
+        for &piece_to_move in self.piece_set.iter().filter(|p| p.position != None) {
+            for relative in piece_to_move.get_relative_moves() {
+                sol.extend(Movement::from_relative(piece_to_move, relative));
+            }
+        }
+
+        let cloned_board = self.clone();
+        sol.into_iter()
+            .filter(move |mv| cloned_board.check_move(mv).is_ok())
+    }
 }
 
 #[cfg(test)]
@@ -284,7 +315,7 @@ mod test {
             position: Some(p1),
         });
 
-        let b3 = b1.play_move("P1f-1g+");
+        let b3 = b1.play_move("P1f-1g");
 
         let mut b2 = Board::empty();
         b2.turn.invert();
@@ -292,7 +323,7 @@ mod test {
         b2.add_piece(Piece {
             color: Color::White,
             piecetype: PieceType::Pawn,
-            promoted: true,
+            promoted: false,
             position: Some(p2),
         });
         assert_eq!(b2, b3);

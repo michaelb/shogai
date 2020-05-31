@@ -49,7 +49,7 @@ impl Piece {
         self.position = None;
     }
     ///get relatives moves of a piece: but do not check if piece have to 'jump' over other pieces
-    pub fn get_relative_moves(&self, start: Position) -> Vec<i32> {
+    pub fn get_relative_moves(&self) -> Vec<i32> {
         //beware to check that moves  not within a column make not the piece's "wrap around" the board in case the move is next to the border
         //
         //check position % 9 == (position + relat_mov%9)%9
@@ -81,7 +81,7 @@ impl Piece {
             {
                 possibles_moves = vec![1, -1, 8, 9, 10, -9]
             } else {
-                possibles_moves.append(vec![1, -1, 8, 9, 10, -8, -9, -10]);
+                possibles_moves.append(&mut vec![1, -1, 8, 9, 10, -8, -9, -10]);
                 possibles_moves.sort();
                 possibles_moves.dedup();
             }
@@ -97,7 +97,10 @@ impl Piece {
         //make those board-aware (see first comment)
         return possibles_moves_colored
             .into_iter()
-            .filter(|&mv| start.0 as i32 % 9 == (start.0 as i32 + mv % 9) % 9)
+            .filter(|&mv| {
+                self.position.unwrap().0 as i32 % 9
+                    == (self.position.unwrap().0 as i32 + mv % 9) % 9
+            })
             .collect();
     }
 }

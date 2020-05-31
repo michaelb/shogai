@@ -2,6 +2,7 @@ use crate::invalidmoveerror::*;
 use crate::piece::*;
 use crate::position::*;
 use std::fmt;
+use std::iter::once;
 
 use std::str::FromStr;
 ///!respect the standard notation, found at https://en.wikipedia.org/wiki/Shogi_notation#Piece
@@ -25,6 +26,27 @@ pub struct Movement {
     pub end: Position,
     pub promotion: bool,
     pub force_capture: bool,
+}
+
+impl Movement {
+    ///only for non-drops movements
+    pub fn from_relative(piece: Piece, relative: i32) -> impl Iterator<Item = String> {
+        let move_non_promoting = Movement {
+            piecetype: piece.piecetype,
+            start: piece.position,
+            end: Position((piece.position.unwrap().0 as i32 + relative) as u16),
+            promotion: false,
+            force_capture: false,
+        };
+        let move_promoting = Movement {
+            piecetype: piece.piecetype,
+            start: piece.position,
+            end: Position((piece.position.unwrap().0 as i32 + relative) as u16),
+            promotion: true,
+            force_capture: false,
+        };
+        return once(move_promoting.to_string()).chain(once(move_non_promoting.to_string()));
+    }
 }
 
 impl fmt::Display for Movement {
