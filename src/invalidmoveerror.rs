@@ -168,19 +168,87 @@ pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
         //drop can be anywhere, special cases are already handled by the DestinationOccupied and
         //NoMoveAfterDrop checks
     }
+    //TODO check promotion
     let full_move: Movement = mv.parse().unwrap();
     let start = full_move.start.unwrap();
-    let piece = check_position(full_move.start.unwrap(), b).unwrap();
-    if piece
+    let piece = check_position(full_move.start.unwrap(), b.clone()).unwrap();
+    if !piece
         .get_relative_moves(start)
         .into_iter()
         .any(|relative_move| relative_move == (full_move.end.0 - start.0) as i32)
     {
-        //TODO check for lance, rook and bishop if all cases in between star-en are free
-        return Ok(mv);
+        return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
+    //TODO check for lance, rook and bishop if all cases in between star-end are free
+    if full_move.piecetype == PieceType::Rook && !check_rook_path(start, full_move.end, b.clone()) {
+        return Err(InvalidMoveError::PieceHasNoSuchMoveError);
+    }
+    if full_move.piecetype == PieceType::Bishop
+        && !check_bishop_path(start, full_move.end, b.clone())
+    {
+        return Err(InvalidMoveError::PieceHasNoSuchMoveError);
+    }
+    if full_move.piecetype == PieceType::Lance && !check_lance_path(start, full_move.end, b.clone())
+    {
+        return Err(InvalidMoveError::PieceHasNoSuchMoveError);
+    }
+    return Ok(mv);
+}
 
-    return Err(InvalidMoveError::PieceHasNoSuchMoveError);
+///return true if the path is clear, false if a piece is blocking the way
+fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
+    let direction = if (end.0 as i32 - start.0 as i32) > 0 {
+        if (end.0 as i32 - start.0 as i32) % 8 == 0 {
+            8
+        } else {
+            10
+        }
+    } else {
+        if (start.0 as i32 - end.0 as i32) % 8 == 0 {
+            -8
+        } else {
+            -10
+        }
+    };
+    let mut counter = start.0 as i32 + direction;
+    while counter != end.0 as i32 {
+        if !(None == check_position(Position(counter as u16), b.clone())) {
+            return false;
+        }
+        counter += direction;
+    }
+    return true;
+}
+///return true if the path is clear, false if a piece is blocking the way
+fn check_rook_path(start: Position, end: Position, b: Board) -> bool {
+    let direction;
+    if start.column() == end.column() {
+        //vertical move
+        direction = if end.0 > start.0 { 9 } else { -9 };
+    } else {
+        //horizontal move
+        direction = if end.0 > start.0 { 1 } else { -1 };
+    }
+    let mut counter = start.0 as i32 + direction;
+    while counter != end.0 as i32 {
+        if !(None == check_position(Position(counter as u16), b.clone())) {
+            return false;
+        }
+        counter += direction;
+    }
+    return true;
+}
+///return true if the path is clear, false if a piece is blocking the way
+fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
+    let direction = if end.0 > start.0 { 9 } else { -9 };
+    let mut counter = start.0 as i32 + direction;
+    while counter != end.0 as i32 {
+        if !(None == check_position(Position(counter as u16), b.clone())) {
+            return false;
+        }
+        counter += direction;
+    }
+    return true;
 }
 
 pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
