@@ -298,7 +298,7 @@ pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, Invali
 
 pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     if !maybe_normal_move(mv) {
-        //move not a normal move so no check
+        //move not a normal move but a drop so no check
         return Ok(mv);
     }
     let last_row;
@@ -317,9 +317,12 @@ pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
 
     if full_move.promotion {
         //promotion is asked
-        if full_move.end.row() != last_row
-            && full_move.end.row() == before_last_row
-            && full_move.end.row() != third_row
+        if (full_move.end.row() != last_row
+            && full_move.end.row() != before_last_row
+            && full_move.end.row() != third_row)
+            || (full_move.start.unwrap().row() != last_row
+                && full_move.start.unwrap().row() != before_last_row
+                && full_move.start.unwrap().row() != third_row)
         {
             return Err(InvalidMoveError::PromotionError);
         }
