@@ -38,15 +38,54 @@ pub enum PieceType {
 }
 
 impl Piece {
+    /// for test purposes only
     fn move_to(&mut self, dest_square: Position) {
         self.position = Some(dest_square);
     }
 
+    ///for test purposes only
     fn remove(&mut self) {
         self.color.invert();
         self.position = None;
     }
+    ///get relatives moves of a piece: but do not check if piece have to 'jump' over other pieces
+    pub fn get_relative_moves(&self, start: Position) -> Vec<i32> {
+        //beware to check that moves  not within a column make not the piece's "wrap around" the board in case the move is next to the border
+        //
+        //check position % 9 == (position + relat_mov%9)%9
+
+        //also, whether the piece has to jump over other piece is not checked!
+        let possibles_moves: Vec<i32> = match &self.piecetype {
+            PieceType::Pawn => vec![9],
+            PieceType::King => vec![1, -1, 10, 8, 9, -9, -8, -10],
+            PieceType::Rook => vec![
+                -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, -9, 18, -18, 27, -27,
+                -36, 36, 45, -45, 63, -63, -72, 72,
+            ],
+            PieceType::Bishop => vec![
+                10, 20, 30, 40, 50, 60, 70, 80, -10, -20, -30, -40, -50, -60, -70, -80, 8, 16, 24,
+                32, 40, 48, 56, 64, -8, -16, -24, -32, -40, -48, -56, -64,
+            ],
+            PieceType::Gold => vec![1, -1, 8, 9, 10, -9],
+            PieceType::Silver => vec![8, 9, 10, -8, -10],
+            PieceType::Knight => vec![17, 19],
+            PieceType::Lance => vec![9, 18, 27, 36, 45, 54, 63, 72],
+        };
+        let possibles_moves_colored;
+        if self.color == Color::White {
+            possibles_moves_colored = possibles_moves;
+        } else {
+            possibles_moves_colored = possibles_moves.iter().map(|m| -m).collect::<Vec<i32>>();
+        }
+
+        //make those board-aware (see first comment)
+        return possibles_moves_colored
+            .into_iter()
+            .filter(|&mv| start.0 as i32 % 9 == (start.0 as i32 + mv % 9) % 9)
+            .collect();
+    }
 }
+
 impl fmt::Display for PieceType {
     fn fmt(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
         let symbol = match &self {

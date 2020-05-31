@@ -15,7 +15,7 @@ pub enum InvalidMoveError {
     PieceHasNoSuchMoveError,
     NifuViolationError,
     NoMovePossibleAfterDropError,
-    MandatoryPromotionError,
+    PromotionError,
     UncoverCheckError,
     CheckmateByPawnDropError,
 }
@@ -32,7 +32,7 @@ impl fmt::Display for InvalidMoveError {
             InvalidMoveError::PieceHasNoSuchMoveError => write!(f,"The piece cannot move in such a way"),
             InvalidMoveError::NifuViolationError => write!(f,"A pawn was dropped in a column already occupied by a non-promoted pawn"),
             InvalidMoveError::NoMovePossibleAfterDropError => write!(f,"The piece was dropped in a position but will never be able to move afterwards"),
-            InvalidMoveError::MandatoryPromotionError => write!(f,"The promotion of the piece is mandatory at this position but move do not provide it"),
+            InvalidMoveError::PromotionError => write!(f,"The promotion of the piece is mandatory or impossible at this position but move do not provide the correct instruction"),
             InvalidMoveError::UncoverCheckError => write!(f,"The move uncovers the king"),
             InvalidMoveError::CheckmateByPawnDropError => write!(f,"A checkmate cannot be given by dropping a pawn")
         }
@@ -163,9 +163,24 @@ pub fn check_start(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
 }
 
 pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
-    Ok(mv)
-    //Err(InvalidMoveError::PieceHasNoSuchMove)
-    //TODO
+    if maybe_drop(mv) {
+        return Ok(mv);
+        //drop can be anywhere, special cases are already handled by the DestinationOccupied and
+        //NoMoveAfterDrop checks
+    }
+    let full_move: Movement = mv.parse().unwrap();
+    let start = full_move.start.unwrap();
+    let piece = check_position(full_move.start.unwrap(), b).unwrap();
+    if piece
+        .get_relative_moves(start)
+        .into_iter()
+        .any(|relative_move| relative_move == (full_move.end.0 - start.0) as i32)
+    {
+        //TODO check for lance, rook and bishop if all cases in between star-en are free
+        return Ok(mv);
+    }
+
+    return Err(InvalidMoveError::PieceHasNoSuchMoveError);
 }
 
 pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
@@ -213,10 +228,50 @@ pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, Invali
     }
 }
 
-pub fn check_mandatory_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
-    Ok(mv)
-    //Err(InvalidMoveError::MandatoryPromotionError);
-    //TODO
+pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+    if !maybe_normal_move(mv) {
+        //move not a normal move so no check
+        return Ok(mv);
+    }
+    let last_row;
+    let before_last_row;
+    let third_row;
+    if b.get_color() == Color::White {
+        last_row = 'i';
+        before_last_row = 'h';
+        third_row = 'g';
+    } else {
+        last_row = 'a';
+        before_last_row = 'b';
+        third_row = 'c';
+    }
+    let full_move: Movement = mv.parse().unwrap();
+
+    if full_move.promotion {
+        //promotion is asked
+        if full_move.end.row() != last_row
+            && full_move.end.row() == before_last_row
+            && full_move.end.row() != third_row
+        {
+            return Err(InvalidMoveError::PromotionError);
+        }
+        return Ok(mv);
+    } else {
+        //promotion not asked
+        if let Some(piece) = check_position(full_move.start.unwrap(), b) {
+            if !piece.promoted {
+                if (full_move.piecetype == PieceType::Pawn && full_move.end.row() == last_row)
+                    || (full_move.piecetype == PieceType::Lance && full_move.end.row() == last_row)
+                    || (full_move.piecetype == PieceType::Knight
+                        && (full_move.end.row() == last_row
+                            || full_move.end.row() == before_last_row))
+                {
+                    return Err(InvalidMoveError::PromotionError);
+                }
+            }
+        }
+        return Ok(mv);
+    }
 }
 
 pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {

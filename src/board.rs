@@ -126,7 +126,7 @@ impl Board {
             .and_then(|mv| check_possible_move(mv, self.clone()))
             .and_then(|mv| check_nifu(mv, self.clone()))
             .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
-            .and_then(|mv| check_mandatory_promotion(mv, self.clone()))
+            .and_then(|mv| check_promotion(mv, self.clone()))
             .and_then(|mv| check_uncover_check(mv, self.clone()))
             .and_then(|mv| check_checkmate_by_pawn_drop(mv, self.clone()))
     }
