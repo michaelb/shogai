@@ -6,10 +6,10 @@ a rust interface for shogi engines
 
 an helper programm that can handle the following:
 
-- create and hold a shogiban
+- create a shogiban
 - give information about the board to an external program
-- move pieces (WIP)
-- check if a move is legal (TBI)
+- move pieces
+- check if a move is legal (not fully implemented)
 
 ## installation
 
