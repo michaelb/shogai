@@ -85,6 +85,23 @@ impl Board {
         return self.turn;
     }
 
+    ///says if we are checkmated
+    pub fn game_over(&self) -> bool {
+        let mut can_always_take_the_king = true;
+        for opponent_move in self.clone().iter_moves_partial_check() {
+            let board_before_next = self.clone().play_move_unchecked(&opponent_move);
+            let mut have_move_that_take_the_king = false;
+            for my_next_move in board_before_next.clone().iter_moves_partial_check() {
+                let board_after_next_move = board_before_next.play_move_unchecked(&my_next_move);
+                if !board_after_next_move.contains(PieceType::King, self.get_color()) {
+                    have_move_that_take_the_king = true;
+                }
+            }
+            can_always_take_the_king &= have_move_that_take_the_king;
+        }
+        return can_always_take_the_king;
+    }
+
     pub fn contains(&self, pc: PieceType, color: Color) -> bool {
         for piece in self.piece_set.iter() {
             if piece.color == color && piece.piecetype == pc {

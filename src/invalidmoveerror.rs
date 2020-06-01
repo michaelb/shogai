@@ -371,7 +371,6 @@ pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     for opponent_move in board_after_my_move.iter_moves_partial_check() {
         let future_board = board_after_my_move.play_move_unchecked(&opponent_move);
         if !future_board.contains(PieceType::King, my_color) {
-            println!("trigger");
             //opponent has taken our king
             return Err(InvalidMoveError::UncoverCheckError);
         }
@@ -381,7 +380,31 @@ pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
 }
 
 pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
-    Ok(mv)
-    //Err(InvalidMoveError::CheckmateByPawnDropError)
-    //TODO
+    if maybe_normal_move(mv) || !mv.as_bytes()[0] != b'P' {
+        //not a pawn drop
+        return Ok(mv);
+    }
+
+    let board_after_my_move = b.play_move_unchecked(mv);
+
+    let opponent_color = board_after_my_move.get_color();
+
+    let mut escape_possible = false;
+    for opponent_move in board_after_my_move.clone().iter_moves_partial_check() {
+        let board_before_next = board_after_my_move
+            .clone()
+            .play_move_unchecked(&opponent_move);
+        for my_next_move in board_before_next.clone().iter_moves_partial_check() {
+            let board_after_next_move = board_before_next.play_move_unchecked(&my_next_move);
+            if board_after_next_move.contains(PieceType::King, opponent_color) {
+                escape_possible = true;
+            }
+        }
+    }
+
+    if escape_possible {
+        return Ok(mv);
+    } else {
+        return Err(InvalidMoveError::CheckmateByPawnDropError);
+    }
 }
