@@ -30,18 +30,24 @@ pub struct Movement {
 
 impl Movement {
     ///only for non-drops movements
-    pub fn from_relative(piece: Piece, relative: i32) -> impl Iterator<Item = String> {
+    pub fn from_relative(piece: Piece, relative: (i16, i16)) -> impl Iterator<Item = String> {
         let move_non_promoting = Movement {
             piecetype: piece.piecetype,
             start: piece.position,
-            end: Position((piece.position.unwrap().0 as i32 + relative) as u16),
+            end: Position(
+                (piece.position.unwrap().0 as i32 + relative.0 as i32 + 9 * relative.1 as i32)
+                    as u16,
+            ),
             promotion: false,
             force_capture: false,
         };
         let move_promoting = Movement {
             piecetype: piece.piecetype,
             start: piece.position,
-            end: Position((piece.position.unwrap().0 as i32 + relative) as u16),
+            end: Position(
+                (piece.position.unwrap().0 as i32 + relative.0 as i32 + 9 * relative.1 as i32)
+                    as u16,
+            ),
             promotion: true,
             force_capture: false,
         };

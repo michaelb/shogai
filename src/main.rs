@@ -4,19 +4,20 @@ mod movement;
 mod piece;
 mod position;
 
+use std::thread::sleep;
+use std::time;
+
 fn main() {
-    let mut b = board::Board::empty();
-    let p1: position::Position = "1f".parse().unwrap();
-    b.add_piece(piece::Piece {
-        color: piece::Color::White,
-        piecetype: piece::PieceType::Pawn,
-        promoted: false,
-        position: Some(p1),
-    });
+    let mut b5 = board::Board::new().play_move("K5a-4b");
 
-    println!("{}", b);
-    println!("{}", b.play_move("P1f-1g"));
-
-    let b5 = board::Board::new();
-    println!("{}", b5);
+    loop {
+        println!("");
+        println!("{:?} turn", b5.get_color());
+        println!("{}", b5);
+        let mv = b5.iter_moves().next().unwrap();
+        b5 = b5.play_move(&mv);
+        println!("{}", mv);
+        let one_sec = time::Duration::from_secs(1);
+        sleep(one_sec);
+    }
 }

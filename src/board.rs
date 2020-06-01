@@ -27,20 +27,40 @@ pub struct Board {
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let lines = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
+        let mut counter = 0;
         write!(f, " 9 8 7 6 5 4 3 2 1 \n")?;
         write!(f, "+------------------+\n")?;
         for line in 0..9 {
             write!(f, "|")?;
             for column in 0..9 {
-                if let Some(p) = self.is_occupied_by(Position(line * 9 + (8 - column))) {
+                if let Some(p) = &self.is_occupied_by(Position(line * 9 + (8 - column))) {
                     write!(f, "{}", p)?;
                 } else {
                     write!(f, "  ")?;
                 }
             }
-            write!(f, "|\n")?;
+            write!(f, "|{}\n", lines[counter])?;
+            counter += 1;
         }
         write!(f, "+------------------+\n")?;
+        write!(f, "White reserve: ")?;
+        for white_reserve in self
+            .piece_set
+            .iter()
+            .filter(|piece| piece.position == None && piece.color == Color::White)
+        {
+            write!(f, "{}, ", white_reserve)?;
+        }
+        write!(f, "\nBlack reserve: ")?;
+
+        for white_reserve in self
+            .piece_set
+            .iter()
+            .filter(|piece| piece.position == None && piece.color == Color::Black)
+        {
+            write!(f, "{}, ", white_reserve)?;
+        }
         Ok(())
     }
 }
@@ -65,6 +85,15 @@ impl Board {
         return self.turn;
     }
 
+    pub fn contains(&self, pc: PieceType, color: Color) -> bool {
+        for piece in self.piece_set.iter() {
+            if piece.color == color && piece.piecetype == pc {
+                return true;
+            }
+        }
+        return false;
+    }
+
     ///capture a piece if there, do nothing else
     fn capture_piece(&mut self, p: Position) {
         if let Some((index, _)) = self
@@ -79,9 +108,17 @@ impl Board {
         }
     }
     pub fn play_move(&self, mv: &str) -> Board {
-        if let Err(e) = self.check_move(mv) {
-            //move not valid
-            panic!("Invalid movement : {}", e);
+        return self.play_move_general(mv, true);
+    }
+    pub fn play_move_unchecked(&self, mv: &str) -> Board {
+        return self.play_move_general(mv, false);
+    }
+    fn play_move_general(&self, mv: &str, check: bool) -> Board {
+        if check {
+            if let Err(e) = self.check_move(mv) {
+                //move not valid
+                panic!("Invalid movement : {}", e);
+            }
         }
         let mut new_board = self.clone();
         let movement: Movement = mv.parse().unwrap();
@@ -109,10 +146,11 @@ impl Board {
                 .piece_set
                 .iter()
                 .enumerate()
-                .find(|(_, piece)| piece.piecetype == movement.piecetype)
+                .find(|(_, piece)| piece.piecetype == movement.piecetype && piece.position == None)
                 .unwrap()
                 .0;
             new_board.piece_set[index].position = Some(movement.end);
+            new_board.piece_set[index].promoted = false;
         }
         new_board.turn.invert();
         new_board
@@ -131,6 +169,27 @@ impl Board {
             .and_then(|mv| check_promotion(mv, self.clone()))
             .and_then(|mv| check_uncover_check(mv, self.clone()))
             .and_then(|mv| check_checkmate_by_pawn_drop(mv, self.clone()))
+    }
+
+    pub fn check_move_general<'a>(
+        &self,
+        mv: &'a str,
+        complete_check: bool,
+    ) -> Result<&'a str, InvalidMoveError> {
+        // checks should be performed in this order
+        if complete_check {
+            return self.check_move(mv);
+        } else {
+            return Ok(mv)
+                .and_then(check_syntax)
+                .and_then(check_in_board)
+                .and_then(|mv| check_destination(mv, self.clone()))
+                .and_then(|mv| check_start(mv, self.clone()))
+                .and_then(|mv| check_possible_move(mv, self.clone()))
+                .and_then(|mv| check_nifu(mv, self.clone()))
+                .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
+                .and_then(|mv| check_promotion(mv, self.clone()));
+        }
     }
 
     pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
@@ -261,19 +320,30 @@ impl Board {
     pub fn new<'a>() -> Board {
         let mut b = Board::empty();
         //white is always 'up' ( in the a-b-c rows)
-        b.set(Color::White);
+        b.set(Color::Black);
         let mut b2 = b.flip();
-        b2.set(Color::Black);
+        b2.set(Color::White);
         b2
     }
 
     pub fn iter_moves(&self) -> impl Iterator<Item = String> {
+        return self.iter_moves_general(true);
+    }
+    pub fn iter_moves_partial_check(&self) -> impl Iterator<Item = String> {
+        return self.iter_moves_general(false);
+    }
+
+    fn iter_moves_general(&self, complete_check: bool) -> impl Iterator<Item = String> {
         //all drops chain all moves filter check_move
         let mut sol: Vec<String> = vec![];
 
         //drop moves
         for i in 0..80 {
-            for piece_to_drop in self.piece_set.iter().filter(|p| p.position == None) {
+            for piece_to_drop in self
+                .piece_set
+                .iter()
+                .filter(|p| p.position == None && p.color == self.turn)
+            {
                 let mv = Movement {
                     piecetype: piece_to_drop.piecetype,
                     start: None,
@@ -285,15 +355,20 @@ impl Board {
             }
         }
 
-        for &piece_to_move in self.piece_set.iter().filter(|p| p.position != None) {
+        for &piece_to_move in self
+            .piece_set
+            .iter()
+            .filter(|p| p.position != None && p.color == self.turn)
+        {
             for relative in piece_to_move.get_relative_moves() {
                 sol.extend(Movement::from_relative(piece_to_move, relative));
             }
         }
 
         let cloned_board = self.clone();
-        sol.into_iter()
-            .filter(move |mv| cloned_board.check_move(mv).is_ok())
+        return sol
+            .into_iter()
+            .filter(move |mv| cloned_board.check_move_general(mv, complete_check).is_ok());
     }
 }
 

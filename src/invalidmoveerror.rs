@@ -152,13 +152,16 @@ pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
 
 pub fn check_start(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
-    if b.into_iter()
-        .find(|p| p.position == full_move.start && p.piecetype == full_move.piecetype)
-        == None
+    if b.clone().into_iter().find(|p| {
+        p.position == full_move.start
+            && p.piecetype == full_move.piecetype
+            && p.color == b.get_color()
+    }) == None
     {
         //no such piece at given start position
         return Err(InvalidMoveError::NoPieceAtPositionError);
     }
+
     return Ok(mv);
 }
 
@@ -171,11 +174,13 @@ pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     let full_move: Movement = mv.parse().unwrap();
     let start = full_move.start.unwrap();
     let piece = check_position(full_move.start.unwrap(), b.clone()).unwrap();
-    if !piece
-        .get_relative_moves()
-        .into_iter()
-        .any(|relative_move| relative_move == (full_move.end.0 - start.0) as i32)
-    {
+    if !piece.get_relative_moves().into_iter().any(|relative_move| {
+        (relative_move.0 as i32, relative_move.1 as i32)
+            == (
+                (full_move.end.0 as i32 % 9 - start.0 as i32 % 9),
+                (full_move.end.0 as i32 / 9 - start.0 as i32 / 9),
+            )
+    }) {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
     if full_move.piecetype == PieceType::Rook && !check_rook_path(start, full_move.end, b.clone()) {
@@ -344,16 +349,35 @@ pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     }
 }
 
+///allow to uncover check, else consider the move invalid if it uncovers a check and do not take
+///the opponent king
 pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     if b.rules.can_uncover_check {
         return Ok(mv);
     }
 
     //implement real mechanic here
+    let my_color = b.get_color();
+    let mut opponent_color;
+    {
+        opponent_color = my_color.clone();
+        opponent_color.invert();
+    }
+    if !b.contains(PieceType::King, opponent_color) {
+        return Ok(mv); // we are just taking the opponent King so nothing else to check
+    }
+
+    let board_after_my_move = b.play_move_unchecked(mv);
+    for opponent_move in board_after_my_move.iter_moves_partial_check() {
+        let future_board = board_after_my_move.play_move_unchecked(&opponent_move);
+        if !future_board.contains(PieceType::King, my_color) {
+            println!("trigger");
+            //opponent has taken our king
+            return Err(InvalidMoveError::UncoverCheckError);
+        }
+    }
 
     return Ok(mv);
-    //Err(InvalidMoveError::UncoverCheckError)
-    //TODO
 }
 
 pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {

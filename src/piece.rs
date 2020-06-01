@@ -49,39 +49,108 @@ impl Piece {
         self.position = None;
     }
     ///get relatives moves of a piece: but do not check if piece have to 'jump' over other pieces
-    pub fn get_relative_moves(&self) -> Vec<i32> {
+    pub fn get_relative_moves(&self) -> Vec<(i16, i16)> {
         //beware to check that moves  not within a column make not the piece's "wrap around" the board in case the move is next to the border
         //
-        //check position % 9 == (position + relat_mov%9)%9
 
         //also, whether the piece has to jump over other piece is not checked!
-        let mut possibles_moves: Vec<i32> = match &self.piecetype {
-            PieceType::Pawn => vec![9],
-            PieceType::King => vec![1, -1, 10, 8, 9, -9, -8, -10],
+        let mut possibles_moves: Vec<(i16, i16)> = match &self.piecetype {
+            PieceType::Pawn => vec![(0, 1)],
+            PieceType::King => vec![
+                (1, 0),
+                (-1, 0),
+                (1, 1),
+                (-1, 1),
+                (0, 1),
+                (0, -1),
+                (1, -1),
+                (-1, -1),
+            ],
             PieceType::Rook => vec![
-                -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, -9, 18, -18, 27, -27,
-                -36, 36, 45, -45, 63, -63, -72, 72,
+                (-8, 0),
+                (-7, 0),
+                (-6, 0),
+                (-5, 0),
+                (-4, 0),
+                (-3, 0),
+                (-2, 0),
+                (-1, 0),
+                (1, 0),
+                (2, 0),
+                (3, 0),
+                (4, 0),
+                (5, 0),
+                (6, 0),
+                (7, 0),
+                (8, 0),
+                (0, 1),
+                (0, -1),
+                (0, 2),
+                (0, -2),
+                (0, 3),
+                (0, -3),
+                (0, 4),
+                (0, -4),
+                (0, 5),
+                (0, -5),
+                (0, 6),
+                (0, -6),
+                (0, 7),
+                (0, -7),
+                (0, 8),
+                (0, -8),
             ],
             PieceType::Bishop => vec![
-                10, 20, 30, 40, 50, 60, 70, 80, -10, -20, -30, -40, -50, -60, -70, -80, 8, 16, 24,
-                32, 40, 48, 56, 64, -8, -16, -24, -32, -40, -48, -56, -64,
+                (1, 1),
+                (2, 2),
+                (3, 3),
+                (4, 4),
+                (5, 5),
+                (6, 6),
+                (7, 7),
+                (8, 8),
+                (-1, 1),
+                (-2, 2),
+                (-3, 3),
+                (-4, 4),
+                (-5, 5),
+                (-6, 6),
+                (-7, 7),
+                (-8, 8),
             ],
-            PieceType::Gold => vec![1, -1, 8, 9, 10, -9],
-            PieceType::Silver => vec![8, 9, 10, -8, -10],
-            PieceType::Knight => vec![17, 19],
-            PieceType::Lance => vec![9, 18, 27, 36, 45, 54, 63, 72],
+            PieceType::Gold => vec![(1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (0, -1)],
+            PieceType::Silver => vec![(-1, 1), (1, 0), (0, 1), (1, 1), (1, -1), (-1, -1)],
+            PieceType::Knight => vec![(-1, 2), (1, 2)],
+            PieceType::Lance => vec![
+                (0, 1),
+                (0, 2),
+                (0, 3),
+                (0, 4),
+                (0, 5),
+                (0, 6),
+                (0, 7),
+                (0, 8),
+            ],
         };
 
         //manage promotion
         if self.promoted {
             if self.piecetype == PieceType::Pawn
-                || self.piecetype == PieceType::Lance
                 || self.piecetype == PieceType::Knight
                 || self.piecetype == PieceType::Lance
             {
-                possibles_moves = vec![1, -1, 8, 9, 10, -9]
+                possibles_moves = vec![(1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (0, -1)];
             } else {
-                possibles_moves.append(&mut vec![1, -1, 8, 9, 10, -8, -9, -10]);
+                possibles_moves.append(&mut vec![
+                    (1, 0),
+                    (-1, 0),
+                    (1, 1),
+                    (-1, 1),
+                    (0, 1),
+                    (0, -1),
+                    (1, -1),
+                    (-1, -1),
+                ]);
                 possibles_moves.sort();
                 possibles_moves.dedup();
             }
@@ -91,15 +160,20 @@ impl Piece {
         if self.color == Color::White {
             possibles_moves_colored = possibles_moves;
         } else {
-            possibles_moves_colored = possibles_moves.iter().map(|m| -m).collect::<Vec<i32>>();
+            possibles_moves_colored = possibles_moves
+                .iter()
+                .map(|(m, n)| (-m, -n))
+                .collect::<Vec<(i16, i16)>>();
         }
 
         //make those board-aware (see first comment)
         return possibles_moves_colored
             .into_iter()
             .filter(|&mv| {
-                self.position.unwrap().0 as i32 % 9
-                    == (self.position.unwrap().0 as i32 + mv % 9) % 9
+                (self.position.unwrap().0 as i32 + mv.0 as i32) / 9
+                    == self.position.unwrap().0 as i32 / 9
+                    && (self.position.unwrap().0 as i32 + (mv.0 + 9 * mv.1) as i32) >= 0
+                    && (self.position.unwrap().0 as i32 + (mv.0 + 9 * mv.1) as i32) <= 80
             })
             .collect();
     }
@@ -141,10 +215,18 @@ impl FromStr for PieceType {
 impl fmt::Display for Piece {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let symbol = &self.piecetype.to_string();
+        let colorcodeprefix = match &self.color {
+            Color::White => "",
+            Color::Black => "\x1b[0;31m",
+        };
+        let colorcodesuffix = match &self.color {
+            Color::White => "",
+            Color::Black => "\x1b[0m",
+        };
         if self.promoted {
-            write!(f, "+{}", symbol)
+            write!(f, "{}+{}{}", colorcodeprefix, symbol, colorcodesuffix)
         } else {
-            write!(f, " {}", symbol)
+            write!(f, "{} {}{}", colorcodeprefix, symbol, colorcodesuffix)
         }
     }
 }
