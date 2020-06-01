@@ -191,7 +191,9 @@ pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
-    if full_move.piecetype == PieceType::Lance && !check_lance_path(start, full_move.end, b.clone())
+    if full_move.piecetype == PieceType::Lance
+        && !piece.promoted
+        && !check_lance_path(start, full_move.end, b.clone())
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
@@ -319,12 +321,19 @@ pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     }
     let full_move: Movement = mv.parse().unwrap();
 
+    //cannot promote gold or king
+    if full_move.promotion
+        && (full_move.piecetype == PieceType::Gold || full_move.piecetype == PieceType::King)
+    {
+        return Err(InvalidMoveError::PromotionError);
+    }
+
     if full_move.promotion {
         //promotion is asked
         if (full_move.end.row() != last_row
             && full_move.end.row() != before_last_row
             && full_move.end.row() != third_row)
-            || (full_move.start.unwrap().row() != last_row
+            && (full_move.start.unwrap().row() != last_row
                 && full_move.start.unwrap().row() != before_last_row
                 && full_move.start.unwrap().row() != third_row)
         {

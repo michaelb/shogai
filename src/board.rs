@@ -152,7 +152,9 @@ impl Board {
                 .piece_set
                 .iter()
                 .enumerate()
-                .find(|(_, piece)| piece.position == movement.start)
+                .find(|(_, piece)| {
+                    piece.position == movement.start && piece.color == self.get_color()
+                })
                 .unwrap()
                 .0;
             new_board.piece_set[index].position = Some(movement.end);
@@ -163,7 +165,11 @@ impl Board {
                 .piece_set
                 .iter()
                 .enumerate()
-                .find(|(_, piece)| piece.piecetype == movement.piecetype && piece.position == None)
+                .find(|(_, piece)| {
+                    piece.piecetype == movement.piecetype
+                        && piece.position == None
+                        && piece.color == self.get_color()
+                })
                 .unwrap()
                 .0;
             new_board.piece_set[index].position = Some(movement.end);

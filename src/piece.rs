@@ -138,21 +138,14 @@ impl Piece {
             if self.piecetype == PieceType::Pawn
                 || self.piecetype == PieceType::Knight
                 || self.piecetype == PieceType::Lance
+                || self.piecetype == PieceType::Silver
             {
                 possibles_moves = vec![(1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (0, -1)];
+            } else if self.piecetype == PieceType::Rook {
+                possibles_moves.append(&mut vec![(1, 1), (-1, 1), (1, -1), (-1, -1)]);
             } else {
-                possibles_moves.append(&mut vec![
-                    (1, 0),
-                    (-1, 0),
-                    (1, 1),
-                    (-1, 1),
-                    (0, 1),
-                    (0, -1),
-                    (1, -1),
-                    (-1, -1),
-                ]);
-                possibles_moves.sort();
-                possibles_moves.dedup();
+                // bishop only one left, beacuse gold and king cannot be promoted
+                possibles_moves.append(&mut vec![(1, 0), (-1, 0), (0, 1), (0, -1)]);
             }
         }
 
