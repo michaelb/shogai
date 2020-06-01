@@ -389,20 +389,22 @@ pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidM
 
     let opponent_color = board_after_my_move.get_color();
 
-    let mut escape_possible = false;
+    let mut can_always_take_the_king = true;
     for opponent_move in board_after_my_move.clone().iter_moves_partial_check() {
         let board_before_next = board_after_my_move
             .clone()
             .play_move_unchecked(&opponent_move);
+        let mut have_move_that_take_the_king = false;
         for my_next_move in board_before_next.clone().iter_moves_partial_check() {
             let board_after_next_move = board_before_next.play_move_unchecked(&my_next_move);
-            if board_after_next_move.contains(PieceType::King, opponent_color) {
-                escape_possible = true;
+            if !board_after_next_move.contains(PieceType::King, opponent_color) {
+                have_move_that_take_the_king = true;
             }
         }
+        can_always_take_the_king &= have_move_that_take_the_king;
     }
 
-    if escape_possible {
+    if !can_always_take_the_king {
         return Ok(mv);
     } else {
         return Err(InvalidMoveError::CheckmateByPawnDropError);
