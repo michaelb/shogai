@@ -48,6 +48,84 @@ impl Piece {
         self.color.invert();
         self.position = None;
     }
+
+    ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers
+    pub fn value(&self) -> i32 {
+        match self.piecetype {
+            PieceType::Pawn => {
+                if self.position == None {
+                    115
+                } else if self.promoted {
+                    420
+                } else {
+                    100
+                }
+            }
+            PieceType::Lance => {
+                if self.position == None {
+                    480
+                } else if self.promoted {
+                    630
+                } else {
+                    430
+                }
+            }
+            PieceType::Knight => {
+                if self.position == None {
+                    510
+                } else if self.promoted {
+                    640
+                } else {
+                    450
+                }
+            }
+            PieceType::Silver => {
+                if self.position == None {
+                    720
+                } else if self.promoted {
+                    670
+                } else {
+                    640
+                }
+            }
+            PieceType::Gold => {
+                if self.position == None {
+                    780
+                } else {
+                    690
+                }
+            }
+            PieceType::Rook => {
+                if self.position == None {
+                    1270
+                } else if self.promoted {
+                    1300
+                } else {
+                    1040
+                }
+            }
+            PieceType::Rook => {
+                if self.position == None {
+                    1270
+                } else if self.promoted {
+                    1300
+                } else {
+                    1040
+                }
+            }
+            PieceType::Bishop => {
+                if self.position == None {
+                    1110
+                } else if self.promoted {
+                    1150
+                } else {
+                    890
+                }
+            }
+            PieceType::King => 20126, // max value of all other pieces combined
+        }
+    }
+
     ///get relatives moves of a piece: but do not check if piece have to 'jump' over other pieces
     pub fn get_relative_moves(&self) -> Vec<(i16, i16)> {
         //beware to check that moves  not within a column make not the piece's "wrap around" the board in case the move is next to the border

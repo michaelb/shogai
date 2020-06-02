@@ -84,6 +84,18 @@ impl Board {
     pub fn get_color(&self) -> Color {
         return self.turn;
     }
+    pub fn value(&self) -> i32 {
+        self.piece_set
+            .iter()
+            .map(|piece| {
+                if piece.color == self.turn {
+                    piece.value()
+                } else {
+                    -piece.value()
+                }
+            })
+            .sum()
+    }
 
     ///says if we are checkmated
     pub fn game_over(&self) -> bool {

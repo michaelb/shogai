@@ -1,3 +1,4 @@
+mod ai;
 mod board;
 mod invalidmoveerror;
 mod movement;
@@ -20,7 +21,7 @@ fn main() {
         if b5.get_color() == piece::Color::White {
             mv = get_move_from_human(b5.clone());
         } else {
-            mv = b5.iter_moves().next().unwrap();
+            mv = ai::greedy(b5.clone());
         }
         println!("{:?} has chosen the move: {}", b5.clone().get_color(), mv);
         b5 = b5.play_move_unchecked(&mv);
