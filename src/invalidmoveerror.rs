@@ -33,7 +33,7 @@ impl fmt::Display for InvalidMoveError {
             InvalidMoveError::NifuViolationError => write!(f,"A pawn was dropped in a column already occupied by a non-promoted pawn"),
             InvalidMoveError::NoMovePossibleAfterDropError => write!(f,"The piece was dropped in a position but will never be able to move afterwards"),
             InvalidMoveError::PromotionError => write!(f,"The promotion of the piece is mandatory or impossible at this position but move do not provide the correct instruction"),
-            InvalidMoveError::UncoverCheckError => write!(f,"The move uncovers the king"),
+            InvalidMoveError::UncoverCheckError => write!(f,"The king cannot be left in check with the current rules"),
             InvalidMoveError::CheckmateByPawnDropError => write!(f,"A checkmate cannot be given by dropping a pawn")
         }
     }
