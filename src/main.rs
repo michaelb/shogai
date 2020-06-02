@@ -11,7 +11,6 @@ use std::time;
 
 fn main() {
     let mut b5 = board::Board::new();
-
     loop {
         println!("");
         println!("{:?} turn", b5.get_color());

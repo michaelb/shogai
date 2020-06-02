@@ -142,7 +142,7 @@ pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
             //check if there is not one's own piece already there
             if let Some(p) = check_position(destination, b) {
                 if p.color == current_player_color {
-                    return Err(InvalidMoveError::NoPieceCapturedError);
+                    return Err(InvalidMoveError::DestinationOccupiedError);
                 }
             }
             return Ok(mv);
@@ -165,6 +165,14 @@ pub fn check_start(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     return Ok(mv);
 }
 
+///the move only moves from square next to each other, no need to check path (and path-checking has
+///trouble with promotino so it's win-win
+fn small_move(start: Position, end: Position) -> bool {
+    let x = start.row() as i32 - end.row() as i32;
+    let y = start.column() as i32 - end.column() as i32;
+    return x.abs() <= 1 && y.abs() <= 1;
+}
+
 pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     if maybe_drop(mv) {
         return Ok(mv);
@@ -183,17 +191,21 @@ pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     }) {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
-    if full_move.piecetype == PieceType::Rook && !check_rook_path(start, full_move.end, b.clone()) {
+    if full_move.piecetype == PieceType::Rook
+        && !small_move(start, full_move.end)
+        && !check_rook_path(start, full_move.end, b.clone())
+    {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
     if full_move.piecetype == PieceType::Bishop
         && !check_bishop_path(start, full_move.end, b.clone())
+        && !small_move(start, full_move.end)
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
     if full_move.piecetype == PieceType::Lance
-        && !piece.promoted
         && !check_lance_path(start, full_move.end, b.clone())
+        && !small_move(start, full_move.end)
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
@@ -389,33 +401,16 @@ pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
 }
 
 pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
-    if maybe_normal_move(mv) || !mv.as_bytes()[0] != b'P' {
-        //not a pawn drop
+    let full_move: Movement = mv.parse().unwrap();
+    //ok if not a pawn or if not a drop
+    if !(None == full_move.start) || full_move.piecetype != PieceType::Pawn {
         return Ok(mv);
     }
 
     let board_after_my_move = b.play_move_unchecked(mv);
-
-    let opponent_color = board_after_my_move.get_color();
-
-    let mut can_always_take_the_king = true;
-    for opponent_move in board_after_my_move.clone().iter_moves_partial_check() {
-        let board_before_next = board_after_my_move
-            .clone()
-            .play_move_unchecked(&opponent_move);
-        let mut have_move_that_take_the_king = false;
-        for my_next_move in board_before_next.clone().iter_moves_partial_check() {
-            let board_after_next_move = board_before_next.play_move_unchecked(&my_next_move);
-            if !board_after_next_move.contains(PieceType::King, opponent_color) {
-                have_move_that_take_the_king = true;
-            }
-        }
-        can_always_take_the_king &= have_move_that_take_the_king;
-    }
-
-    if !can_always_take_the_king {
-        return Ok(mv);
-    } else {
+    if board_after_my_move.game_over() {
         return Err(InvalidMoveError::CheckmateByPawnDropError);
+    } else {
+        Ok(mv)
     }
 }
