@@ -110,7 +110,10 @@ pub fn check_in_board(mv: &str) -> Result<&str, InvalidMoveError> {
 }
 
 fn check_position(p: Position, b: Board) -> Option<Piece> {
-    b.into_iter().find(|piece| piece.position == Some(p))
+    b.piece_set
+        .iter()
+        .map(|&p| p)
+        .find(|piece| piece.position == Some(p))
 }
 
 ///check if destination is not occupied (or occupied by opponent)
@@ -152,7 +155,7 @@ pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inval
 
 pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
-    if b.clone().into_iter().find(|p| {
+    if b.piece_set.iter().find(|p| {
         p.position == full_move.start
             && p.piecetype == full_move.piecetype
             && p.color == b.get_color()
@@ -177,7 +180,6 @@ pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
     if maybe_drop(mv) {
         return Ok(mv);
         //drop can be anywhere, special cases are already handled by the DestinationOccupied and
-        //NoMoveAfterDrop checks
     }
     let full_move: Movement = mv.parse().unwrap();
     let start = full_move.start.unwrap();
@@ -198,14 +200,14 @@ pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
     if full_move.piecetype == PieceType::Bishop
-        && !check_bishop_path(start, full_move.end, b.clone())
         && !small_move(start, full_move.end)
+        && !check_bishop_path(start, full_move.end, b.clone())
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
     if full_move.piecetype == PieceType::Lance
-        && !check_lance_path(start, full_move.end, b.clone())
         && !small_move(start, full_move.end)
+        && !check_lance_path(start, full_move.end, b.clone())
     {
         return Err(InvalidMoveError::PieceHasNoSuchMoveError);
     }
@@ -214,19 +216,20 @@ pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
 
 ///return true if the path is clear, false if a piece is blocking the way
 pub fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
-    let direction = if (end.0 as i32 - start.0 as i32) > 0 {
-        if (end.0 as i32 - start.0 as i32) % 8 == 0 {
-            8
-        } else {
+    let direction = if (end.row() as u8 as i16 - start.row() as u8 as i16) > 0 {
+        if (end.column() as u8 as i16 - start.column() as u8 as i16) > 0 {
             10
+        } else {
+            8
         }
     } else {
-        if (start.0 as i32 - end.0 as i32) % 8 == 0 {
+        if (end.column() as u8 as i16 - start.column() as u8 as i16) > 0 {
             -8
         } else {
             -10
         }
     };
+
     let mut counter = start.0 as i32 + direction;
     while counter != end.0 as i32 {
         if !(None == check_position(Position(counter as u16), b.clone())) {
@@ -268,14 +271,16 @@ pub fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
     return true;
 }
 
-pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_nifu<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
     if full_move.piecetype != PieceType::Pawn || full_move.start != None {
         //not a pawn, not a drop
         return Ok(mv);
     }
-    if let Some(_) = b.into_iter().filter(|p| p.position != None).find(|p| {
-        p.piecetype == PieceType::Pawn && p.position.unwrap().0 % 9 == full_move.end.0 % 9
+    if let Some(_) = b.piece_set.iter().filter(|p| p.position != None).find(|p| {
+        p.piecetype == PieceType::Pawn
+            && p.position.unwrap().0 % 9 == full_move.end.0 % 9
+            && p.color == b.get_color()
     }) {
         //two pawn on same column
         return Err(InvalidMoveError::NifuViolationError);
@@ -283,7 +288,10 @@ pub fn check_nifu(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     return Ok(mv);
 }
 
-pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_move_possible_after_drop<'a>(
+    mv: &'a str,
+    b: &'a Board,
+) -> Result<&'a str, InvalidMoveError> {
     if !maybe_drop(mv) {
         //move not a drop so no check
         return Ok(mv);
@@ -313,7 +321,7 @@ pub fn check_move_possible_after_drop(mv: &str, b: Board) -> Result<&str, Invali
     }
 }
 
-pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_promotion<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     //TODO :proper test
     if !maybe_normal_move(mv) {
         //move not a normal move but a drop so no check
@@ -354,7 +362,7 @@ pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
         return Ok(mv);
     } else {
         //promotion not asked
-        if let Some(piece) = check_position(full_move.start.unwrap(), b) {
+        if let Some(piece) = b.is_occupied_by(full_move.start.unwrap()) {
             if !piece.promoted {
                 if (full_move.piecetype == PieceType::Pawn && full_move.end.row() == last_row)
                     || (full_move.piecetype == PieceType::Lance && full_move.end.row() == last_row)
@@ -372,7 +380,7 @@ pub fn check_promotion(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
 
 ///allow to uncover check, else consider the move invalid if it uncovers a check and do not take
 ///the opponent king
-pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_uncover_check<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     if b.rules.can_uncover_check {
         return Ok(mv);
     }
@@ -381,7 +389,7 @@ pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     let my_color = b.get_color();
     let mut opponent_color;
     {
-        opponent_color = my_color.clone();
+        opponent_color = my_color;
         opponent_color.invert();
     }
     if !b.contains(PieceType::King, opponent_color) {
@@ -400,10 +408,25 @@ pub fn check_uncover_check(mv: &str, b: Board) -> Result<&str, InvalidMoveError>
     return Ok(mv);
 }
 
-pub fn check_checkmate_by_pawn_drop(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_checkmate_by_pawn_drop<'a>(
+    mv: &'a str,
+    b: &'a Board,
+) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
     //ok if not a pawn or if not a drop
     if !(None == full_move.start) || full_move.piecetype != PieceType::Pawn {
+        return Ok(mv);
+    }
+
+    //check if pawn dropped in front to opponent king
+    let direction = if b.get_color() == Color::White { 9 } else { -9 };
+    if let Some(piece) = b.is_occupied_by(Position((full_move.end.0 as i32 + direction) as u16)) {
+        if piece.piecetype == PieceType::King && piece.color != b.get_color() {
+            //this may be a checkmate by pawn drop
+        } else {
+            return Ok(mv);
+        }
+    } else {
         return Ok(mv);
     }
 

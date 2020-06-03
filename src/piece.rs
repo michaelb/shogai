@@ -2,6 +2,9 @@ use crate::position::Position;
 use std::fmt;
 use std::str::FromStr;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub struct Piece {
     pub color: Color,
@@ -195,6 +198,22 @@ impl Piece {
                 (-6, 6),
                 (-7, 7),
                 (-8, 8),
+                (1, -1),
+                (2, -2),
+                (3, -3),
+                (4, -4),
+                (5, -5),
+                (6, -6),
+                (7, -7),
+                (8, -8),
+                (-1, -1),
+                (-2, -2),
+                (-3, -3),
+                (-4, -4),
+                (-5, -5),
+                (-6, -6),
+                (-7, -7),
+                (-8, -8),
             ],
             PieceType::Gold => vec![(1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (0, -1)],
             PieceType::Silver => vec![(-1, 1), (1, 0), (0, 1), (1, 1), (1, -1), (-1, -1)],
@@ -227,7 +246,7 @@ impl Piece {
             }
         }
 
-        let possibles_moves_colored;
+        let mut possibles_moves_colored;
         if self.color == Color::White {
             possibles_moves_colored = possibles_moves;
         } else {
@@ -236,6 +255,8 @@ impl Piece {
                 .map(|(m, n)| (-m, -n))
                 .collect::<Vec<(i16, i16)>>();
         }
+
+        possibles_moves_colored.shuffle(&mut thread_rng());
 
         //make those board-aware (see first comment)
         return possibles_moves_colored

@@ -20,8 +20,8 @@ impl Default for Rules {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
-    piece_set: Vec<Piece>,
-    turn: Color,
+    pub piece_set: Vec<Piece>,
+    pub turn: Color,
     pub rules: Rules,
 }
 
@@ -65,14 +65,6 @@ impl std::fmt::Display for Board {
     }
 }
 
-impl IntoIterator for Board {
-    type Item = Piece;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.piece_set.into_iter()
-    }
-}
-
 impl Board {
     pub fn empty() -> Self {
         Board {
@@ -100,11 +92,12 @@ impl Board {
     ///says if we are checkmated
     pub fn game_over(&self) -> bool {
         let mut can_always_take_the_king = true;
-        for opponent_move in self.clone().iter_moves_partial_check() {
-            let board_before_next = self.clone().play_move_unchecked(&opponent_move);
+        for my_possible_move in self.iter_moves_partial_check() {
+            let board_before_next = self.play_move_unchecked(&my_possible_move);
             let mut have_move_that_take_the_king = false;
-            for my_next_move in board_before_next.clone().iter_moves_partial_check() {
-                let board_after_next_move = board_before_next.play_move_unchecked(&my_next_move);
+            for opponent_next_move in board_before_next.iter_normal_moves_only(false) {
+                let board_after_next_move =
+                    board_before_next.play_move_unchecked(&opponent_next_move);
                 if !board_after_next_move.contains(PieceType::King, self.get_color()) {
                     have_move_that_take_the_king = true;
                 }
@@ -199,11 +192,11 @@ impl Board {
             .and_then(|mv| check_start(mv, self))
             .and_then(|mv| check_destination(mv, self))
             .and_then(|mv| check_possible_move(mv, self))
-            .and_then(|mv| check_nifu(mv, self.clone()))
-            .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
-            .and_then(|mv| check_promotion(mv, self.clone()))
-            .and_then(|mv| check_uncover_check(mv, self.clone()))
-            .and_then(|mv| check_checkmate_by_pawn_drop(mv, self.clone()))
+            .and_then(|mv| check_nifu(mv, self))
+            .and_then(|mv| check_move_possible_after_drop(mv, self))
+            .and_then(|mv| check_promotion(mv, self))
+            .and_then(|mv| check_uncover_check(mv, self))
+            .and_then(|mv| check_checkmate_by_pawn_drop(mv, self))
     }
 
     pub fn check_move_general<'a>(
@@ -221,9 +214,9 @@ impl Board {
                 .and_then(|mv| check_start(mv, self))
                 .and_then(|mv| check_destination(mv, self))
                 .and_then(|mv| check_possible_move(mv, self))
-                .and_then(|mv| check_nifu(mv, self.clone()))
-                .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
-                .and_then(|mv| check_promotion(mv, self.clone()));
+                .and_then(|mv| check_nifu(mv, self))
+                .and_then(|mv| check_move_possible_after_drop(mv, self))
+                .and_then(|mv| check_promotion(mv, self));
         }
     }
 
@@ -271,7 +264,7 @@ impl Board {
     }
 
     ///set the regular starting position for one player
-    fn set(&mut self, col: Color) {
+    pub fn set(&mut self, col: Color) {
         for i in 18..27 {
             let p = Piece {
                 color: col,
@@ -366,6 +359,23 @@ impl Board {
     }
     pub fn iter_moves_partial_check(&self) -> impl Iterator<Item = String> {
         return self.iter_moves_general(false);
+    }
+    pub fn iter_normal_moves_only(&self, complete_check: bool) -> impl Iterator<Item = String> {
+        let mut sol: Vec<String> = vec![];
+        for &piece_to_move in self
+            .piece_set
+            .iter()
+            .filter(|p| p.position != None && p.color == self.turn)
+        {
+            for relative in piece_to_move.get_relative_moves() {
+                sol.extend(Movement::from_relative(piece_to_move, relative));
+            }
+        }
+
+        let cloned_board = self.clone();
+        return sol
+            .into_iter()
+            .filter(move |mv| cloned_board.check_move_general(mv, complete_check).is_ok());
     }
 
     fn iter_moves_general(&self, complete_check: bool) -> impl Iterator<Item = String> {
