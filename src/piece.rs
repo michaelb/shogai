@@ -5,7 +5,7 @@ use std::str::FromStr;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, Hash)]
 pub struct Piece {
     pub color: Color,
     pub piecetype: PieceType,
@@ -13,7 +13,7 @@ pub struct Piece {
     pub position: Option<Position>, // if a piece is not on the board, it can NOT be promoted
 }
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, Hash)]
 pub enum Color {
     Black,
     White,
@@ -28,7 +28,7 @@ impl Color {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, Hash)]
 pub enum PieceType {
     Pawn,
     King,
@@ -52,12 +52,14 @@ impl Piece {
         self.position = None;
     }
 
-    ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers
+    ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers. values of
+    ///piece in one's hand are also set to 0 arbitrarily
     pub fn value(&self) -> i32 {
         match self.piecetype {
             PieceType::Pawn => {
                 if self.position == None {
-                    115
+                    // 115
+                    0
                 } else if self.promoted {
                     420
                 } else {
@@ -66,7 +68,8 @@ impl Piece {
             }
             PieceType::Lance => {
                 if self.position == None {
-                    480
+                    // 480
+                    0
                 } else if self.promoted {
                     630
                 } else {
@@ -75,7 +78,8 @@ impl Piece {
             }
             PieceType::Knight => {
                 if self.position == None {
-                    510
+                    // 510
+                    0
                 } else if self.promoted {
                     640
                 } else {
@@ -84,7 +88,8 @@ impl Piece {
             }
             PieceType::Silver => {
                 if self.position == None {
-                    720
+                    // 720
+                    0
                 } else if self.promoted {
                     670
                 } else {
@@ -93,14 +98,16 @@ impl Piece {
             }
             PieceType::Gold => {
                 if self.position == None {
-                    780
+                    // 780
+                    0
                 } else {
                     690
                 }
             }
             PieceType::Rook => {
                 if self.position == None {
-                    1270
+                    // 1270
+                    0
                 } else if self.promoted {
                     1300
                 } else {
@@ -109,7 +116,8 @@ impl Piece {
             }
             PieceType::Rook => {
                 if self.position == None {
-                    1270
+                    // 1270
+                    0
                 } else if self.promoted {
                     1300
                 } else {
@@ -118,7 +126,8 @@ impl Piece {
             }
             PieceType::Bishop => {
                 if self.position == None {
-                    1110
+                    // 1110
+                    0
                 } else if self.promoted {
                     1150
                 } else {

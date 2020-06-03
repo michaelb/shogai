@@ -16,16 +16,19 @@ use std::str::FromStr;
 ///!The promotion status may be provided anytime but will trigger the check if promotion is
 ///!requested but the piece does not fulfill conditions to be promoted, or if promotion is
 ///!mandatory but the promotion was not requested
-///! No extra + must be provided to move a promoted pawn after the promotion. No extra '=' must
+///! No extra + is required to move a promoted pawn after the promotion. No extra '=' must
 ///!be provided if the piece can be promoted but the player choose not to
 ///!An example of a drop is written "P*3e"
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Movement {
     pub piecetype: PieceType,
     pub start: Option<Position>,
     pub end: Position,
     pub promotion: bool,
     pub force_capture: bool,
+    pub offer_draw: bool,
+    pub withdraw: bool,
+    pub restart: bool,
 }
 
 impl Movement {
@@ -40,6 +43,9 @@ impl Movement {
             ),
             promotion: false,
             force_capture: false,
+            offer_draw: false,
+            withdraw: false,
+            restart: false,
         };
         let move_promoting = Movement {
             piecetype: piece.piecetype,
@@ -50,6 +56,9 @@ impl Movement {
             ),
             promotion: true,
             force_capture: false,
+            offer_draw: false,
+            withdraw: false,
+            restart: false,
         };
         return once(move_promoting.to_string()).chain(once(move_non_promoting.to_string()));
     }
@@ -57,7 +66,9 @@ impl Movement {
 
 impl fmt::Display for Movement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.start == None {
+        if self.restart {
+            write!(f, "restart")
+        } else if self.start == None {
             //is a drop move
             write!(
                 f,
@@ -92,6 +103,18 @@ impl FromStr for Movement {
     // probably panic if given a wrong format
     type Err = String;
     fn from_str(s: &str) -> Result<Movement, String> {
+        if s == "restart" {
+            return Ok(Movement {
+                piecetype: PieceType::Pawn,
+                start: None,
+                end: Position(0),
+                promotion: false,
+                force_capture: false,
+                offer_draw: false,
+                withdraw: false,
+                restart: true,
+            });
+        }
         let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
         let mut pr = false;
         let fs: Vec<char> = s
@@ -120,6 +143,9 @@ impl FromStr for Movement {
                 end: p2,
                 promotion: pr,
                 force_capture: fc,
+                offer_draw: false,
+                withdraw: false,
+                restart: false,
             })
         } else {
             // drop movement
@@ -131,6 +157,9 @@ impl FromStr for Movement {
                 end: p1,
                 promotion: pr,
                 force_capture: false,
+                offer_draw: false,
+                withdraw: false,
+                restart: false,
             })
         }
     }
@@ -151,6 +180,9 @@ mod test {
                         end: Position(end),
                         promotion: pr,
                         force_capture: true,
+                        offer_draw: false,
+                        withdraw: false,
+                        restart: false,
                     };
 
                     let s = mv.clone().to_string();
@@ -164,6 +196,15 @@ mod test {
     fn testdrop() {
         let s = "P*8f".to_string();
         let mv = s.clone().parse::<Movement>().unwrap();
+        let s2 = mv.to_string();
+        assert_eq!(s, s2);
+    }
+
+    #[test]
+    fn testrestart() {
+        let s = "restart";
+        let mv: Movement = s.clone().parse().unwrap();
+        assert!(mv.restart);
         let s2 = mv.to_string();
         assert_eq!(s, s2);
     }

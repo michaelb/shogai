@@ -5,7 +5,7 @@ use crate::position::*;
 
 use std::iter::once;
 
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, Hash)]
 pub struct Rules {
     pub can_uncover_check: bool,
 }
@@ -18,7 +18,7 @@ impl Default for Rules {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Board {
     pub piece_set: Vec<Piece>,
     pub turn: Color,
@@ -76,6 +76,17 @@ impl Board {
     pub fn get_color(&self) -> Color {
         return self.turn;
     }
+
+    pub fn withdraw(&mut self, c: Color) {
+        let tmp: Vec<Piece> = self
+            .piece_set
+            .iter()
+            .filter(|p| p.color != c)
+            .map(|&p| p)
+            .collect();
+        self.piece_set = tmp;
+    }
+
     pub fn value(&self) -> i32 {
         self.piece_set
             .iter()
@@ -129,6 +140,7 @@ impl Board {
             self.piece_set[index].promoted = false;
         }
     }
+
     pub fn play_move(&self, mv: &str) -> Board {
         return self.play_move_general(mv, true);
     }
@@ -136,13 +148,18 @@ impl Board {
         return self.play_move_general(mv, false);
     }
     fn play_move_general(&self, mv: &str, check: bool) -> Board {
+        let mut new_board = self.clone();
+        if mv == "restart" {
+            println!("restart");
+            return Self::new();
+        }
+
         if check {
             if let Err(e) = self.check_move(mv) {
                 //move not valid
                 panic!("Invalid movement : {}", e);
             }
         }
-        let mut new_board = self.clone();
         let movement: Movement = mv.parse().unwrap();
 
         //movement was checked so it's ok to just play
@@ -395,6 +412,9 @@ impl Board {
                     end: Position(i),
                     promotion: false,
                     force_capture: false,
+                    offer_draw: false,
+                    withdraw: false,
+                    restart: false,
                 };
                 sol.extend(once(mv.to_string()));
             }
