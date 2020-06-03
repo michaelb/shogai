@@ -191,14 +191,14 @@ impl Board {
         new_board
     }
 
-    pub fn check_move<'a>(&self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
+    pub fn check_move<'a>(&'a self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
         // checks should be performed in this order
         Ok(mv)
             .and_then(check_syntax)
             .and_then(check_in_board)
-            .and_then(|mv| check_start(mv, self.clone()))
-            .and_then(|mv| check_destination(mv, self.clone()))
-            .and_then(|mv| check_possible_move(mv, self.clone()))
+            .and_then(|mv| check_start(mv, self))
+            .and_then(|mv| check_destination(mv, self))
+            .and_then(|mv| check_possible_move(mv, self))
             .and_then(|mv| check_nifu(mv, self.clone()))
             .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
             .and_then(|mv| check_promotion(mv, self.clone()))
@@ -207,7 +207,7 @@ impl Board {
     }
 
     pub fn check_move_general<'a>(
-        &self,
+        &'a self,
         mv: &'a str,
         complete_check: bool,
     ) -> Result<&'a str, InvalidMoveError> {
@@ -218,9 +218,9 @@ impl Board {
             return Ok(mv)
                 .and_then(check_syntax)
                 .and_then(check_in_board)
-                .and_then(|mv| check_start(mv, self.clone()))
-                .and_then(|mv| check_destination(mv, self.clone()))
-                .and_then(|mv| check_possible_move(mv, self.clone()))
+                .and_then(|mv| check_start(mv, self))
+                .and_then(|mv| check_destination(mv, self))
+                .and_then(|mv| check_possible_move(mv, self))
                 .and_then(|mv| check_nifu(mv, self.clone()))
                 .and_then(|mv| check_move_possible_after_drop(mv, self.clone()))
                 .and_then(|mv| check_promotion(mv, self.clone()));

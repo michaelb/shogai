@@ -114,14 +114,14 @@ fn check_position(p: Position, b: Board) -> Option<Piece> {
 }
 
 ///check if destination is not occupied (or occupied by opponent)
-pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
 
     let destination = full_move.end;
 
     if full_move.start == None {
         //the move is a drop
-        if None == check_position(destination, b) {
+        if None == b.is_occupied_by(destination) {
             //ok the destination is empty
             return Ok(mv);
         } else {
@@ -132,7 +132,7 @@ pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
         let current_player_color = b.get_color();
         if full_move.force_capture {
             // check there is an opponent piece there
-            if let Some(p) = check_position(destination, b) {
+            if let Some(p) = b.is_occupied_by(destination) {
                 if p.color != current_player_color {
                     return Ok(mv);
                 }
@@ -140,7 +140,7 @@ pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
             return Err(InvalidMoveError::NoPieceCapturedError);
         } else {
             //check if there is not one's own piece already there
-            if let Some(p) = check_position(destination, b) {
+            if let Some(p) = b.is_occupied_by(destination) {
                 if p.color == current_player_color {
                     return Err(InvalidMoveError::DestinationOccupiedError);
                 }
@@ -150,7 +150,7 @@ pub fn check_destination(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
     }
 }
 
-pub fn check_start(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
     if b.clone().into_iter().find(|p| {
         p.position == full_move.start
@@ -173,7 +173,7 @@ fn small_move(start: Position, end: Position) -> bool {
     return x.abs() <= 1 && y.abs() <= 1;
 }
 
-pub fn check_possible_move(mv: &str, b: Board) -> Result<&str, InvalidMoveError> {
+pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     if maybe_drop(mv) {
         return Ok(mv);
         //drop can be anywhere, special cases are already handled by the DestinationOccupied and
