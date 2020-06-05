@@ -225,7 +225,7 @@ impl Piece {
                 (-8, -8),
             ],
             PieceType::Gold => vec![(1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (0, -1)],
-            PieceType::Silver => vec![(-1, 1), (1, 0), (0, 1), (1, 1), (1, -1), (-1, -1)],
+            PieceType::Silver => vec![(-1, 1), (0, 1), (1, 1), (1, -1), (-1, -1)],
             PieceType::Knight => vec![(-1, 2), (1, 2)],
             PieceType::Lance => vec![
                 (0, 1),

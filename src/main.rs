@@ -5,41 +5,38 @@ mod movement;
 mod piece;
 mod position;
 
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::io;
 use std::io::*;
-use std::thread::sleep;
-use std::time;
 
 fn main() {
+    game();
+}
+
+fn game() {
     let mut b5 = board::Board::new();
 
     loop {
         println!("");
         println!("{:?} turn", b5.get_color());
         println!("{}", b5);
-        b5.piece_set.shuffle(&mut thread_rng());
 
         let mv;
         if b5.get_color() == piece::Color::White {
-            mv = get_move_from_human(b5.clone());
-        // mv = ai::greedy(b5.clone());
+            // mv = get_move_from_human(b5.clone());
+            mv = ai::greedy(b5.clone());
         // mv = ai::best_move(&trainer, &b5.clone());
         } else {
             mv = ai::greedy(b5.clone());
         }
 
         println!("{:?} has chosen the move: {}", b5.clone().get_color(), mv);
-        b5 = b5.play_move_unchecked(&mv);
+        b5 = b5.play_move(&mv);
         if b5.game_over() {
             println!("{:?} has lost the game!", b5.get_color());
             println!("final disposition of the board is \n{}", b5);
 
             break;
         }
-        // let some_time = time::Duration::from_millis(100);
-        // sleep(some_time);
     }
 }
 

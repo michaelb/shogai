@@ -110,10 +110,7 @@ pub fn check_in_board(mv: &str) -> Result<&str, InvalidMoveError> {
 }
 
 fn check_position(p: Position, b: Board) -> Option<Piece> {
-    b.piece_set
-        .iter()
-        .map(|&p| p)
-        .find(|piece| piece.position == Some(p))
+    b.iter().map(|&p| p).find(|piece| piece.position == Some(p))
 }
 
 ///check if destination is not occupied (or occupied by opponent)
@@ -155,7 +152,7 @@ pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inval
 
 pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
-    if b.piece_set.iter().find(|p| {
+    if b.iter().find(|p| {
         p.position == full_move.start
             && p.piecetype == full_move.piecetype
             && p.color == b.get_color()
@@ -277,7 +274,7 @@ pub fn check_nifu<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveE
         //not a pawn, not a drop
         return Ok(mv);
     }
-    if let Some(_) = b.piece_set.iter().filter(|p| p.position != None).find(|p| {
+    if let Some(_) = b.iter().filter(|p| p.position != None).find(|p| {
         p.piecetype == PieceType::Pawn
             && p.position.unwrap().0 % 9 == full_move.end.0 % 9
             && p.color == b.get_color()

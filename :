@@ -50,18 +50,18 @@ impl std::fmt::Display for Board {
         write!(f, "White reserve: ")?;
         for white_reserve in self
             .iter()
-            .filter(|piece| piece.position == None && piece.color == Color::White)
-        {
-            write!(f, "{}, ", white_reserve)?;
-        }
+                .filter(|piece| piece.position == None && piece.color == Color::White)
+                {
+                    write!(f, "{}, ", white_reserve)?;
+                }
         write!(f, "\nBlack reserve: ")?;
 
         for white_reserve in self
             .iter()
-            .filter(|piece| piece.position == None && piece.color == Color::Black)
-        {
-            write!(f, "{}, ", white_reserve)?;
-        }
+                .filter(|piece| piece.position == None && piece.color == Color::Black)
+                {
+                    write!(f, "{}, ", white_reserve)?;
+                }
         Ok(())
     }
 }
@@ -136,7 +136,7 @@ impl Board {
                     -piece.value()
                 }
             })
-            .sum()
+        .sum()
     }
 
     ///says if we are checkmated
@@ -178,13 +178,8 @@ impl Board {
     fn capture_piece(&mut self, p: Position) {
         let my_color = self.get_color();
         let mut opponent_color = my_color;
-        let mut old_piece = Piece {
-            piecetype: PieceType::Pawn,
-            color: Color::White,
-            position: Some(Position(99)),
-            promoted: true,
-        }; //impossible piece just case it ends up in replace(.,.)
-        let mut new_piece = old_piece;
+        let mut old_piece = Piece{PieceType::Pawn, color:Color::White, position: Some(Position(-1)), promoted: true}; //impossible piece just case it ends up in replace(.,.)
+        let mut new_piece;
         let mut piece_was_captured = false;
         opponent_color.invert();
         for piece in self.iter_pawns(opponent_color) {
@@ -193,7 +188,7 @@ impl Board {
                 new_piece = *piece;
                 old_piece = *piece;
                 new_piece.color.invert();
-                new_piece.position = None;
+                new_piece.position == None;
                 new_piece.promoted = false;
             }
         }
@@ -203,7 +198,7 @@ impl Board {
                 new_piece = *piece;
                 old_piece = *piece;
                 new_piece.color.invert();
-                new_piece.position = None;
+                new_piece.position == None;
                 new_piece.promoted = false;
             }
         }
@@ -244,7 +239,7 @@ impl Board {
             //then move the piece
             let exact_piece = self.is_occupied_by(movement.start.unwrap()).unwrap();
             let mut new_piece = exact_piece;
-            new_piece.position = Some(movement.end);
+            new_piece.position == Some(movement.end);
             new_piece.promoted |= movement.promotion;
 
             new_board.replace(exact_piece, new_piece);
@@ -257,7 +252,7 @@ impl Board {
                         && piece.position == None
                         && piece.color == self.get_color()
                 })
-                .unwrap();
+            .unwrap();
 
             let mut new_piece = exact_piece;
             new_piece.position = Some(movement.end);
@@ -288,7 +283,7 @@ impl Board {
         &'a self,
         mv: &'a str,
         complete_check: bool,
-    ) -> Result<&'a str, InvalidMoveError> {
+        ) -> Result<&'a str, InvalidMoveError> {
         // checks should be performed in this order
         if complete_check {
             return self.check_move(mv);
@@ -335,29 +330,27 @@ impl Board {
         return self.iter().map(|&p| p).collect();
     }
 
+    ///a simple reverse is not enough since
     ///a central symmetry is needed
     pub fn flip(&mut self) {
-        let mut tmp: Vec<(Piece, Piece)> = Vec::new();
+        let mut tmp: Vec<Piece> = Vec::new();
         for piece in self.iter() {
             let pos = piece.position;
             if let Some(x) = pos {
                 let i = x.0 % 9;
                 let j = x.0 / 9;
                 let new_x = (8 - j) * 9 + (8 - i);
-                let new_piece = Piece {
+                tmp.push(Piece {
                     color: piece.color,
                     piecetype: piece.piecetype,
                     promoted: piece.promoted,
                     position: Some(Position(new_x)),
-                };
-                let old_piece = *piece;
-
-                tmp.push((new_piece, old_piece));
+                });
             }
         }
 
-        for (new_piece, old_piece) in tmp.iter() {
-            self.replace(*old_piece, *new_piece);
+        for &piece in tmp.iter() {
+            self.add_piece(piece);
         }
     }
 
@@ -502,30 +495,30 @@ impl Board {
         for i in 0..80 {
             for piece_to_drop in self
                 .iter()
-                .filter(|p| p.position == None && p.color == self.turn)
-            {
-                let mv = Movement {
-                    piecetype: piece_to_drop.piecetype,
-                    start: None,
-                    end: Position(i),
-                    promotion: false,
-                    force_capture: false,
-                    offer_draw: false,
-                    withdraw: false,
-                    restart: false,
-                };
-                sol.extend(once(mv.to_string()));
-            }
+                    .filter(|p| p.position == None && p.color == self.turn)
+                    {
+                        let mv = Movement {
+                            piecetype: piece_to_drop.piecetype,
+                            start: None,
+                            end: Position(i),
+                            promotion: false,
+                            force_capture: false,
+                            offer_draw: false,
+                            withdraw: false,
+                            restart: false,
+                        };
+                        sol.extend(once(mv.to_string()));
+                    }
         }
 
         for piece_to_move in self
             .iter()
-            .filter(|p| p.position != None && p.color == self.turn)
-        {
-            for relative in piece_to_move.get_relative_moves() {
-                sol.extend(Movement::from_relative(piece_to_move, relative));
-            }
-        }
+                .filter(|p| p.position != None && p.color == self.turn)
+                {
+                    for relative in piece_to_move.get_relative_moves() {
+                        sol.extend(Movement::from_relative(piece_to_move, relative));
+                    }
+                }
 
         let cloned_board = self.clone();
         return sol
