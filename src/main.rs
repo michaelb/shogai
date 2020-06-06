@@ -22,21 +22,22 @@ fn game() {
 
         let mv;
         if b5.get_color() == piece::Color::White {
-            // mv = get_move_from_human(b5.clone());
-            mv = ai::greedy(b5.clone());
+            mv = get_move_from_human(b5.clone());
+        // mv = ai::greedy(b5.clone());
         // mv = ai::best_move(&trainer, &b5.clone());
         } else {
+            // mv = get_move_from_human(b5.clone());
             mv = ai::greedy(b5.clone());
         }
 
         println!("{:?} has chosen the move: {}", b5.clone().get_color(), mv);
-        b5 = b5.play_move(&mv);
-        if b5.game_over() {
-            println!("{:?} has lost the game!", b5.get_color());
-            println!("final disposition of the board is \n{}", b5);
-
-            break;
-        }
+        b5 = b5.play_move_unchecked(&mv);
+        // if b5.game_over() {
+        //     println!("{:?} has lost the game!", b5.get_color());
+        //     println!("final disposition of the board is \n{}", b5);
+        //
+        //     break;
+        // }
     }
 }
 
@@ -59,4 +60,5 @@ fn get_move_from_human(b: board::Board) -> String {
     } else {
         return input;
     }
+    // return input;
 }

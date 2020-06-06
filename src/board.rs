@@ -81,29 +81,83 @@ impl Board {
         return self.turn;
     }
 
-    ///replace a piece by another piece (usually the same piece moved to another position)
-    /// rely on the predicate that the first piece exists
-    fn replace(&mut self, piece: Piece, new_piece: Piece) {
+    fn push(&mut self, piece: Piece) {
+        if piece.piecetype == PieceType::Pawn {
+            if piece.color == Color::White {
+                self.white_pawns.push(piece);
+            } else {
+                self.black_pawns.push(piece);
+            }
+        } else {
+            if piece.color == Color::White {
+                self.white_pieces.push(piece);
+            } else {
+                self.black_pieces.push(piece);
+            }
+        }
+    }
+    fn remove(&mut self, piece: Piece) {
         if piece.piecetype == PieceType::Pawn {
             if piece.color == Color::White {
                 if let Some(index) = self.white_pawns.iter().position(|&p| p == piece) {
-                    self.white_pawns[index] = new_piece;
+                    self.white_pawns.remove(index);
+                    return;
                 }
             } else {
                 if let Some(index) = self.black_pawns.iter().position(|&p| p == piece) {
-                    self.black_pawns[index] = new_piece;
+                    self.black_pawns.remove(index);
+                    return;
                 }
             }
         } else {
             if piece.color == Color::White {
                 if let Some(index) = self.white_pieces.iter().position(|&p| p == piece) {
-                    self.white_pieces[index] = new_piece;
+                    self.white_pieces.remove(index);
+                    return;
                 }
             } else {
                 if let Some(index) = self.black_pieces.iter().position(|&p| p == piece) {
-                    self.black_pieces[index] = new_piece;
+                    self.black_pieces.remove(index);
+                    return;
                 }
             }
+        }
+    }
+
+    ///replace a piece by another piece (usually the same piece moved to another position)
+    /// rely on the predicate that the first piece exists
+    fn replace(&mut self, piece: Piece, new_piece: Piece) {
+        //optimize in case it's just a normal move
+        if piece.color == new_piece.color && piece.piecetype == new_piece.piecetype {
+            if piece.piecetype == PieceType::Pawn {
+                if piece.color == Color::White {
+                    if let Some(index) = self.white_pawns.iter().position(|&p| p == piece) {
+                        self.white_pawns[index] = new_piece;
+                        return;
+                    }
+                } else {
+                    if let Some(index) = self.black_pawns.iter().position(|&p| p == piece) {
+                        self.black_pawns[index] = new_piece;
+                        return;
+                    }
+                }
+            } else {
+                if piece.color == Color::White {
+                    if let Some(index) = self.white_pieces.iter().position(|&p| p == piece) {
+                        self.white_pieces[index] = new_piece;
+                        return;
+                    }
+                } else {
+                    if let Some(index) = self.black_pieces.iter().position(|&p| p == piece) {
+                        self.black_pieces[index] = new_piece;
+                        return;
+                    }
+                }
+            }
+        } else {
+            // pop, push
+            self.remove(piece);
+            self.push(new_piece);
         }
     }
 
