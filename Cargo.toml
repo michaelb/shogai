@@ -8,5 +8,4 @@ edition = "2018"
 
 [dependencies]
 rand="*"
-rurel="0.1.2"
 arrayvec="*"

@@ -195,6 +195,10 @@ impl Board {
 
     ///says if we are checkmated
     pub fn game_over(&self) -> bool {
+        if self.rules.can_uncover_check {
+            return self.contains(PieceType::King, self.get_color());
+        }
+
         let mut can_always_take_the_king = true;
         for my_possible_move in self.iter_moves_partial_check() {
             let board_before_next = self.play_move_unchecked(&my_possible_move);
@@ -506,11 +510,11 @@ impl Board {
         b
     }
     pub fn iter(&self) -> impl Iterator<Item = &Piece> {
-        self.white_pawns
+        self.white_pieces
             .iter()
-            .chain(self.black_pawns.iter())
-            .chain(self.white_pieces.iter())
             .chain(self.black_pieces.iter())
+            .chain(self.black_pawns.iter())
+            .chain(self.white_pawns.iter())
     }
     pub fn iter_pawns(&self, c: Color) -> impl Iterator<Item = &Piece> {
         if c == Color::White {

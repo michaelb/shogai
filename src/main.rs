@@ -22,9 +22,8 @@ fn game() {
 
         let mv;
         if b5.get_color() == piece::Color::White {
-            mv = get_move_from_human(b5.clone());
-        // mv = ai::greedy(b5.clone());
-        // mv = ai::best_move(&trainer, &b5.clone());
+            // mv = get_move_from_human(b5.clone());
+            mv = ai::greedy(b5.clone());
         } else {
             // mv = get_move_from_human(b5.clone());
             mv = ai::greedy(b5.clone());

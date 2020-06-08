@@ -109,10 +109,6 @@ pub fn check_in_board(mv: &str) -> Result<&str, InvalidMoveError> {
     }
 }
 
-fn check_position(p: Position, b: Board) -> Option<Piece> {
-    b.iter().map(|&p| p).find(|piece| piece.position == Some(p))
-}
-
 ///check if destination is not occupied (or occupied by opponent)
 pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
@@ -152,11 +148,13 @@ pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inval
 
 pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
-    if b.iter().find(|p| {
-        p.position == full_move.start
-            && p.piecetype == full_move.piecetype
-            && p.color == b.get_color()
-    }) == None
+    let color = b.get_color();
+    if b.iter_pawns(color)
+        .find(|p| p.position == full_move.start && p.piecetype == full_move.piecetype)
+        == None
+        && b.iter_pieces(color)
+            .find(|p| p.position == full_move.start && p.piecetype == full_move.piecetype)
+            == None
     {
         //no such piece at given start position
         return Err(InvalidMoveError::NoPieceAtPositionError);
@@ -180,7 +178,7 @@ pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
     }
     let full_move: Movement = mv.parse().unwrap();
     let start = full_move.start.unwrap();
-    let piece = check_position(full_move.start.unwrap(), b.clone()).unwrap();
+    let piece = b.is_occupied_by(full_move.start.unwrap()).unwrap();
     if !piece.get_relative_moves().into_iter().any(|relative_move| {
         (relative_move.0 as i32, relative_move.1 as i32)
             == (
@@ -229,7 +227,7 @@ pub fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
 
     let mut counter = start.0 as i32 + direction;
     while counter != end.0 as i32 {
-        if !(None == check_position(Position(counter as u16), b.clone())) {
+        if !(None == b.is_occupied_by(Position(counter as u16))) {
             return false;
         }
         counter += direction;
@@ -248,7 +246,7 @@ pub fn check_rook_path(start: Position, end: Position, b: Board) -> bool {
     }
     let mut counter = start.0 as i32 + direction;
     while counter != end.0 as i32 {
-        if !(None == check_position(Position(counter as u16), b.clone())) {
+        if !(None == b.is_occupied_by(Position(counter as u16))) {
             return false;
         }
         counter += direction;
@@ -260,7 +258,7 @@ pub fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
     let direction = if end.0 > start.0 { 9 } else { -9 };
     let mut counter = start.0 as i32 + direction;
     while counter != end.0 as i32 {
-        if !(None == check_position(Position(counter as u16), b.clone())) {
+        if !(None == b.is_occupied_by(Position(counter as u16))) {
             return false;
         }
         counter += direction;
@@ -274,11 +272,11 @@ pub fn check_nifu<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveE
         //not a pawn, not a drop
         return Ok(mv);
     }
-    if let Some(_) = b.iter().filter(|p| p.position != None).find(|p| {
-        p.piecetype == PieceType::Pawn
-            && p.position.unwrap().0 % 9 == full_move.end.0 % 9
-            && p.color == b.get_color()
-    }) {
+    if let Some(_) = b
+        .iter_pawns(b.get_color())
+        .filter(|p| p.position != None)
+        .find(|p| p.position.unwrap().0 % 9 == full_move.end.0 % 9)
+    {
         //two pawn on same column
         return Err(InvalidMoveError::NifuViolationError);
     }
@@ -394,7 +392,7 @@ pub fn check_uncover_check<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
     }
 
     let board_after_my_move = b.play_move_unchecked(mv);
-    for opponent_move in board_after_my_move.iter_moves_partial_check() {
+    for opponent_move in board_after_my_move.iter_normal_moves_only(false) {
         let future_board = board_after_my_move.play_move_unchecked(&opponent_move);
         if !future_board.contains(PieceType::King, my_color) {
             //opponent has taken our king

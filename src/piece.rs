@@ -58,8 +58,7 @@ impl Piece {
         match self.piecetype {
             PieceType::Pawn => {
                 if self.position == None {
-                    // 115
-                    0
+                    115
                 } else if self.promoted {
                     420
                 } else {
@@ -68,8 +67,7 @@ impl Piece {
             }
             PieceType::Lance => {
                 if self.position == None {
-                    // 480
-                    0
+                    480
                 } else if self.promoted {
                     630
                 } else {
@@ -78,8 +76,7 @@ impl Piece {
             }
             PieceType::Knight => {
                 if self.position == None {
-                    // 510
-                    0
+                    510
                 } else if self.promoted {
                     640
                 } else {
@@ -88,8 +85,7 @@ impl Piece {
             }
             PieceType::Silver => {
                 if self.position == None {
-                    // 720
-                    0
+                    720
                 } else if self.promoted {
                     670
                 } else {
@@ -98,16 +94,14 @@ impl Piece {
             }
             PieceType::Gold => {
                 if self.position == None {
-                    // 780
-                    0
+                    780
                 } else {
                     690
                 }
             }
             PieceType::Rook => {
                 if self.position == None {
-                    // 1270
-                    0
+                    1270
                 } else if self.promoted {
                     1300
                 } else {
@@ -116,8 +110,7 @@ impl Piece {
             }
             PieceType::Rook => {
                 if self.position == None {
-                    // 1270
-                    0
+                    1270
                 } else if self.promoted {
                     1300
                 } else {
@@ -126,8 +119,7 @@ impl Piece {
             }
             PieceType::Bishop => {
                 if self.position == None {
-                    // 1110
-                    0
+                    1110
                 } else if self.promoted {
                     1150
                 } else {
