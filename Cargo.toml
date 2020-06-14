@@ -1,8 +1,15 @@
 [package]
 name = "shogai"
 version = "0.1.0"
-authors = ["bleuezm <michael.bleuez@grenoble-inp.org>"]
+authors = ["Bleuez Michael <michael.bleuez2@gmail.com>"]
 edition = "2018"
+description = "A shogi helper"
+readme = "README.md"
+repository = "https://github.com/michaelb/shogai"
+license = "GPL-3.0"
+keywords = ["shogi", "helper", "engine", "shogiban", "board"]
+categories = ["game-development","game-engine","games"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
