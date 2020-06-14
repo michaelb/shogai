@@ -210,7 +210,7 @@ pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
 }
 
 ///return true if the path is clear, false if a piece is blocking the way
-pub fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
+fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
     let direction = if (end.row() as u8 as i16 - start.row() as u8 as i16) > 0 {
         if (end.column() as u8 as i16 - start.column() as u8 as i16) > 0 {
             10
@@ -235,7 +235,7 @@ pub fn check_bishop_path(start: Position, end: Position, b: Board) -> bool {
     return true;
 }
 ///return true if the path is clear, false if a piece is blocking the way
-pub fn check_rook_path(start: Position, end: Position, b: Board) -> bool {
+fn check_rook_path(start: Position, end: Position, b: Board) -> bool {
     let direction;
     if start.column() == end.column() {
         //vertical move
@@ -254,7 +254,7 @@ pub fn check_rook_path(start: Position, end: Position, b: Board) -> bool {
     return true;
 }
 ///return true if the path is clear, false if a piece is blocking the way
-pub fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
+fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
     let direction = if end.0 > start.0 { 9 } else { -9 };
     let mut counter = start.0 as i32 + direction;
     while counter != end.0 as i32 {
@@ -425,6 +425,7 @@ pub fn check_checkmate_by_pawn_drop<'a>(
         return Ok(mv);
     }
 
+    //expensive, but unevitable check
     let board_after_my_move = b.play_move_unchecked(mv);
     if board_after_my_move.game_over() {
         return Err(InvalidMoveError::CheckmateByPawnDropError);

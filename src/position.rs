@@ -4,6 +4,7 @@ use std::str::FromStr;
 pub struct Position(pub u16); //but must range between 0 and 80
                               //(81 position for 9*9 grid)
 
+///Simple methods on Position
 impl Position {
     pub fn row(&self) -> char {
         return ((self.0 / 9) as u8 + 'a' as u8) as char;
@@ -31,6 +32,7 @@ impl FromStr for Position {
         let (x, y) = (v[0], v[1]);
         let p = (x.parse::<u8>().unwrap() as u8 - 1)
             + (y.parse::<char>().unwrap() as u8 - 'a' as u8) * 9;
+        assert!(p <= 80);
         Ok(Position(p as u16))
     }
 }

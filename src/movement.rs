@@ -32,7 +32,7 @@ pub struct Movement {
 }
 
 impl Movement {
-    ///only for non-drops movements
+    ///get possible absolute moves from pieces and relative movement
     pub fn from_relative(piece: &Piece, relative: (i16, i16)) -> impl Iterator<Item = String> {
         let move_non_promoting = Movement {
             piecetype: piece.piecetype,
@@ -68,6 +68,10 @@ impl fmt::Display for Movement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.restart {
             write!(f, "restart")
+        } else if self.withdraw {
+            write!(f, "withdraw")
+        } else if self.offer_draw {
+            write!(f, "offer draw")
         } else if self.start == None {
             //is a drop move
             write!(
@@ -81,6 +85,7 @@ impl fmt::Display for Movement {
                 .join("")
             )
         } else {
+            //is a normal move
             let mut joiner = "-";
             if self.force_capture {
                 joiner = "x";
@@ -100,9 +105,11 @@ impl fmt::Display for Movement {
 }
 
 impl FromStr for Movement {
-    // probably panic if given a wrong format
+    // probably panic if given a wrong format, you better use check_move, or a part of it
+    // before parsing. check_move is a bit heavy though
     type Err = String;
     fn from_str(s: &str) -> Result<Movement, String> {
+        //special cases
         if s == "restart" {
             return Ok(Movement {
                 piecetype: PieceType::Pawn,
@@ -115,13 +122,40 @@ impl FromStr for Movement {
                 restart: true,
             });
         }
+        if s == "withdraw" {
+            return Ok(Movement {
+                piecetype: PieceType::Pawn,
+                start: None,
+                end: Position(0),
+                promotion: false,
+                force_capture: false,
+                offer_draw: false,
+                withdraw: true,
+                restart: false,
+            });
+        }
+        if s == "offer_draw" {
+            return Ok(Movement {
+                piecetype: PieceType::Pawn,
+                start: None,
+                end: Position(0),
+                promotion: false,
+                force_capture: false,
+                offer_draw: true,
+                withdraw: false,
+                restart: false,
+            });
+        }
+
+        //parsing reals moves
         let piecetype: PieceType = s.chars().next().unwrap().to_string().parse().unwrap();
         let mut pr = false;
         let fs: Vec<char> = s
             .chars()
             .filter(|&c| !(c >= 'A' && c <= 'Z') && c != '-' && c != 'x')
             .collect();
-        // moving a piece across the board
+        //
+        // moving a piece across the board, not a drop
         if fs[0] != '*' {
             if *fs.last().unwrap() == '+' {
                 pr = true;

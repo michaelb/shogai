@@ -14,6 +14,8 @@ pub struct Piece {
 }
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, Hash)]
+///though there is not really "color" in shogi, it is simpler
+///to think and visualize with this
 pub enum Color {
     Black,
     White,
@@ -53,7 +55,6 @@ impl Piece {
     }
 
     ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers. values of
-    ///piece in one's hand are also set to 0 arbitrarily
     pub fn value(&self) -> i32 {
         match self.piecetype {
             PieceType::Pawn => {
@@ -97,15 +98,6 @@ impl Piece {
                     780
                 } else {
                     690
-                }
-            }
-            PieceType::Rook => {
-                if self.position == None {
-                    1270
-                } else if self.promoted {
-                    1300
-                } else {
-                    1040
                 }
             }
             PieceType::Rook => {
@@ -306,6 +298,7 @@ impl FromStr for PieceType {
 }
 
 impl fmt::Display for Piece {
+    /// display on terminal the piece, black pieces are colored in red and white as default color
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let symbol = &self.piecetype.to_string();
         let colorcodeprefix = match &self.color {

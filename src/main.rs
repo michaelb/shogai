@@ -13,6 +13,7 @@ fn main() {
 }
 
 fn game() {
+    // example of using the program
     let mut b5 = board::Board::new();
 
     loop {
@@ -31,12 +32,12 @@ fn game() {
 
         println!("{:?} has chosen the move: {}", b5.clone().get_color(), mv);
         b5 = b5.play_move_unchecked(&mv);
-        // if b5.game_over() {
-        //     println!("{:?} has lost the game!", b5.get_color());
-        //     println!("final disposition of the board is \n{}", b5);
-        //
-        //     break;
-        // }
+        if b5.game_over() {
+            println!("{:?} has lost the game!", b5.get_color());
+            println!("final disposition of the board is \n{}", b5);
+
+            break;
+        }
     }
 }
 
