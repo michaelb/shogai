@@ -84,6 +84,39 @@ pub mod board;
 /// differents types of incorrect moves.
 pub mod invalidmoveerror;
 /// Handles the conversion from string literal to computer-understandable movement structure
+///respect the [standard notation](https://en.wikipedia.org/wiki/Shogi_notation#Piece)
+///(see: Western notation);
+///
+///For quick reminder:
+///
+///normal move [Piece type][start]-[end][optionnal promotion]
+///
+///drop        [Piece type]*[end]
+///
+///However, origin must always be written! (implicit start position not allowed)
+///
+///
+///If a opponent's piece is taken, the move *can*, *optionnaly*, be written as (eg) P1gx1f (note the x instead of the -). This will ensure an extra
+///check to make sure there is a opponent piece there.
+///
+///If the piece is to be promoted, the move should be written "P4d-4c+" ('+' at the end of the
+///move).
+///The promotion status may be provided anytime but will trigger the check (and panic) if promotion is
+///requested but the piece does not fulfill conditions to be promoted, or if promotion is
+///mandatory but the promotion was not requested.
+/// No extra + is required to move a promoted pawn after the promotion. No extra '=' must
+///be provided if the piece can be promoted but the player choose not to.
+///
+///# Examples
+///Dropping a pawn at position 3e: "P*3e"
+///
+///
+///Moving the king from 5i to 4h : "K5i-4h"
+///
+///Taking an opponent pawn with a Lance: "L9ax9f"
+///
+///Also taking an opponent pawn with a Lance: "L9a-9f"
+///
 pub mod movement;
 /// Represent shogi pieces
 pub mod piece;

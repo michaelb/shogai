@@ -5,20 +5,7 @@ use std::fmt;
 use std::iter::once;
 
 use std::str::FromStr;
-///!respect the standard notation, found at https://en.wikipedia.org/wiki/Shogi_notation#Piece
-///!(see: Western notation)
-///!However, origin must always be written!
-///! Examples:
-///!Moving a pawn for square 1g to square 1f is written "P1g-1f"
-///!If a opponent's piece is taken, the move can be written as P1gx1f. This will ensure an extra
-///!check to make sure there is a opponent piece there
-///!If the piece is to be promoted, the move should be written "P4d-4c+" ('+' at the en of the move)
-///!The promotion status may be provided anytime but will trigger the check if promotion is
-///!requested but the piece does not fulfill conditions to be promoted, or if promotion is
-///!mandatory but the promotion was not requested
-///! No extra + is required to move a promoted pawn after the promotion. No extra '=' must
-///!be provided if the piece can be promoted but the player choose not to
-///!An example of a drop is written "P*3e"
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Movement {
     pub piecetype: PieceType,
