@@ -65,6 +65,7 @@ fn maybe_normal_move(mv: &str) -> bool {
     }
 }
 
+/// check if move is syntaxically correct
 pub fn check_syntax(mv: &str) -> Result<&str, InvalidMoveError> {
     if !(maybe_drop(mv) || maybe_normal_move(mv)) {
         return Err(InvalidMoveError::MoveSyntaxError);
@@ -146,6 +147,7 @@ pub fn check_destination<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inval
     }
 }
 
+///check if there is indeed a piece at the given start location
 pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
     let color = b.get_color();
@@ -163,14 +165,14 @@ pub fn check_start<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMove
     return Ok(mv);
 }
 
-///the move only moves from square next to each other, no need to check path (and path-checking has
-///trouble with promotino so it's win-win
+///the move only moves the piece from/to squares next to each other, no need to check path
 fn small_move(start: Position, end: Position) -> bool {
     let x = start.row() as i32 - end.row() as i32;
     let y = start.column() as i32 - end.column() as i32;
     return x.abs() <= 1 && y.abs() <= 1;
 }
 
+///check if the piece is allowed to move in such a way, according to its type/promotion
 pub fn check_possible_move<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     if maybe_drop(mv) {
         return Ok(mv);
@@ -266,6 +268,7 @@ fn check_lance_path(start: Position, end: Position, b: Board) -> bool {
     return true;
 }
 
+/// check if the nifu rule is respected
 pub fn check_nifu<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
     let full_move: Movement = mv.parse().unwrap();
     if full_move.piecetype != PieceType::Pawn || full_move.start != None {
@@ -283,6 +286,7 @@ pub fn check_nifu<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveE
     return Ok(mv);
 }
 
+/// check if piece is dropped in a case where it will be allowed to move after
 pub fn check_move_possible_after_drop<'a>(
     mv: &'a str,
     b: &'a Board,
@@ -316,8 +320,8 @@ pub fn check_move_possible_after_drop<'a>(
     }
 }
 
+///check if promotion (or absence of promotion) is allowed
 pub fn check_promotion<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
-    //TODO :proper test
     if !maybe_normal_move(mv) {
         //move not a normal move but a drop so no check
         return Ok(mv);
@@ -403,6 +407,7 @@ pub fn check_uncover_check<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Inv
     return Ok(mv);
 }
 
+/// check whether the move respect the no checkmate by pawn drop rule
 pub fn check_checkmate_by_pawn_drop<'a>(
     mv: &'a str,
     b: &'a Board,

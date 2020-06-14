@@ -246,6 +246,7 @@ impl Board {
     }
 
     /// Play a move (but check if it is legal beforehand, else panic with a nice error message) and return a new board containing pieces in their new position
+    #[allow(dead_code)]
     pub fn play_move(&self, mv: &str) -> Board {
         return self.play_move_general(mv, true);
     }
