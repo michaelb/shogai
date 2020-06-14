@@ -34,7 +34,7 @@
 //!    }
 //!
 //!    println!("{:?} has chosen the move: {}", b.get_color(), mv);
-//!    b = b.play_move_unchecked(&mv); //because check are done within ai and get_human_mvoe
+//!    b = b.play_move_unchecked(&mv); //because checks are done within greedy and get_human_move
 //!    if b.game_over() {
 //!        println!("{:?} has lost the game!", b.get_color());
 //!        println!("final disposition of the board is \n{}", b);
@@ -76,10 +76,16 @@
 
 #[warn(missing_docs)]
 #[warn(missing_doc_code_examples)]
-/// provide user with a way to generate moves
+/// Provide user with a way to generate moves
 pub mod ai;
+/// Manage and manipulate information about the shogi board (shogiban) state
 pub mod board;
+/// Check a move against a board, to ensure legality. Different functions are used to check
+/// differents types of incorrect moves.
 pub mod invalidmoveerror;
+/// Handles the conversion from string literal to computer-understandable movement structure
 pub mod movement;
+/// Represent shogi pieces
 pub mod piece;
+/// Represent square of the shogiban
 pub mod position;

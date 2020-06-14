@@ -167,7 +167,7 @@ impl Board {
             .sum()
     }
 
-    /// return whether the current player is checkmated
+    ///says if we are checkmated
     pub fn game_over(&self) -> bool {
         if self.rules.can_uncover_check {
             return self.contains(PieceType::King, self.get_color());
@@ -189,7 +189,6 @@ impl Board {
         return can_always_take_the_king;
     }
 
-    ///return whether the board contains a piece of given type and color
     pub fn contains(&self, pc: PieceType, color: Color) -> bool {
         if pc == PieceType::Pawn {
             for piece in self.iter_pawns(color) {
@@ -245,12 +244,9 @@ impl Board {
         }
     }
 
-    /// Play a move (but check if it is legal beforehand, else panic with a nice error message) and return a new board containing pieces in their new position
     pub fn play_move(&self, mv: &str) -> Board {
         return self.play_move_general(mv, true);
     }
-    /// Play a move and return a new board, but do no check if the move is legal, or even
-    /// syntaxically correct. If given a illegal/incorrect move, this function will probably panic
     pub fn play_move_unchecked(&self, mv: &str) -> Board {
         return self.play_move_general(mv, false);
     }
@@ -305,7 +301,6 @@ impl Board {
         new_board
     }
 
-    /// Check if a move is 100% valid
     pub fn check_move<'a>(&'a self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
         // checks should be performed in this order
         Ok(mv)
@@ -321,14 +316,7 @@ impl Board {
             .and_then(|mv| check_checkmate_by_pawn_drop(mv, self))
     }
 
-    #[allow(dead_code)]
-    /// Check move, but not whether the king is uncovered or if the king is checkmated by a pawn
-    /// drop
-    pub fn check_move_partial<'a>(&'a self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
-        return self.check_move(mv);
-    }
-
-    fn check_move_general<'a>(
+    pub fn check_move_general<'a>(
         &'a self,
         mv: &'a str,
         complete_check: bool,
@@ -349,7 +337,6 @@ impl Board {
         }
     }
 
-    /// return Some(the_piece_in_that_position) or None if nothing was found there
     pub fn is_occupied_by(&self, pos: Position) -> Option<Piece> {
         for &p in self.iter() {
             if p.position == Some(pos) {
@@ -359,7 +346,6 @@ impl Board {
         None
     }
 
-    ///add a piece to the board
     pub fn add_piece(&mut self, piece: Piece) {
         if piece.piecetype == PieceType::Pawn {
             if piece.color == Color::White {
@@ -484,7 +470,6 @@ impl Board {
         });
     }
 
-    /// create new default board with the starting configuration
     pub fn new<'a>() -> Board {
         let mut b = Board::empty();
         //white is always 'up' ( in the a-b-c rows)
@@ -493,7 +478,6 @@ impl Board {
         b.set(Color::White);
         b
     }
-    /// iter over all the pieces in the board (and reserve)
     pub fn iter(&self) -> impl Iterator<Item = &Piece> {
         self.white_pieces
             .iter()
@@ -501,8 +485,6 @@ impl Board {
             .chain(self.black_pawns.iter())
             .chain(self.white_pawns.iter())
     }
-
-    /// iter over the pawns of the specified color
     pub fn iter_pawns(&self, c: Color) -> impl Iterator<Item = &Piece> {
         if c == Color::White {
             self.white_pawns.iter()
@@ -510,7 +492,6 @@ impl Board {
             self.black_pawns.iter()
         }
     }
-    /// iterate over the pieces (not pawns) of the specified color
     pub fn iter_pieces(&self, c: Color) -> impl Iterator<Item = &Piece> {
         if c == Color::White {
             self.white_pieces.iter()
@@ -519,15 +500,12 @@ impl Board {
         }
     }
 
-    /// iter over all possible moves
     pub fn iter_moves(&self) -> impl Iterator<Item = String> {
         return self.iter_moves_general(true);
     }
-    /// iter over all possible moves without considering uncovering the king of pawn-drop ceckmate
     pub fn iter_moves_partial_check(&self) -> impl Iterator<Item = String> {
         return self.iter_moves_general(false);
     }
-    /// iter only over the normal (not drops)
     pub fn iter_normal_moves_only(&self, complete_check: bool) -> impl Iterator<Item = String> {
         let mut sol: Vec<String> = vec![];
         let c = self.turn;
