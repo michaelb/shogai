@@ -43,17 +43,6 @@ pub enum PieceType {
 }
 
 impl Piece {
-    /// for test purposes only
-    fn move_to(&mut self, dest_square: Position) {
-        self.position = Some(dest_square);
-    }
-
-    ///for test purposes only
-    fn remove(&mut self) {
-        self.color.invert();
-        self.position = None;
-    }
-
     ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers. values of
     pub fn value(&self) -> i32 {
         match self.piecetype {
@@ -321,6 +310,15 @@ impl fmt::Display for Piece {
 mod test {
     use crate::piece::*;
     use crate::position::*;
+    /// for test purposes only
+    fn move_to(p: &mut Piece, dest_square: Position) {
+        p.position = Some(dest_square);
+    }
+    ///for test purposes only
+    fn remove(p: &mut Piece) {
+        p.color.invert();
+        p.position = None;
+    }
 
     #[test]
     fn move_check() {
@@ -342,7 +340,7 @@ mod test {
                     position: Some(b),
                 };
 
-                p1.move_to(c);
+                move_to(&mut p1, c);
                 assert_eq!(p1, p2);
             }
         }
@@ -358,7 +356,7 @@ mod test {
                 promoted: false,
                 position: Some(a),
             };
-            p1.remove();
+            remove(&mut p1);
             assert_eq!(p1.position, None);
             assert_eq!(p1.color, Color::White);
         }

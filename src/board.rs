@@ -81,6 +81,10 @@ impl Board {
         return self.turn;
     }
 
+    pub fn get_turn(&self) -> bool {
+        return self.get_color() == Color::White;
+    }
+
     fn push(&mut self, piece: Piece) {
         if piece.piecetype == PieceType::Pawn {
             if piece.color == Color::White {
@@ -158,26 +162,6 @@ impl Board {
             // pop, push
             self.remove(piece);
             self.push(new_piece);
-        }
-    }
-
-    pub fn withdraw(&mut self, c: Color) {
-        let pawns: ArrayVec<[Piece; 32]> = self
-            .iter_pawns(c)
-            .filter(|p| p.color == c)
-            .map(|&p| p)
-            .collect();
-        let pieces: ArrayVec<[Piece; 32]> = self
-            .iter_pieces(c)
-            .filter(|p| p.color == c)
-            .map(|&p| p)
-            .collect();
-        if c == Color::White {
-            self.white_pawns = pawns;
-            self.white_pieces = pieces;
-        } else {
-            self.black_pawns = pawns;
-            self.black_pieces = pieces;
         }
     }
 
@@ -388,11 +372,6 @@ impl Board {
         }
     }
 
-    ///return the list of the piece
-    pub fn export(&self) -> Vec<Piece> {
-        return self.iter().map(|&p| p).collect();
-    }
-
     ///a central symmetry is needed
     pub fn flip(&mut self) {
         let mut tmp: Vec<(Piece, Piece)> = Vec::new();
@@ -593,10 +572,9 @@ impl Board {
 }
 
 #[cfg(test)]
+#[allow(unused_imports)]
 mod test {
-
     use crate::board::*;
-    use crate::movement::*;
     use crate::piece::*;
     use crate::position::*;
     #[test]
