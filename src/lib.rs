@@ -65,11 +65,20 @@
 //!
 //! let mut b = Board::new();
 //! println!("{}", b);
+//!
+//!
+//!
 //! b = b.play_move(&first_player_move);
+//!
+//!
+//!
 //! println!("{}", b);
-//! //equivalent
+//!
+//!
+//! //equivalent to play_move()
 //! assert!(b.check_move(&second_player_move).is_ok());
 //! b.play_move_unchecked(&second_player_move);
+//!
 //! println!("{}", b);
 //! ```
 //!
