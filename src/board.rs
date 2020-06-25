@@ -189,16 +189,17 @@ impl Board {
         return can_always_take_the_king;
     }
 
-    ///return whether the board contains a piece of given type and color
+    ///return whether the board (not the reserve) contains a piece of given type and color
+    ///there may be such a pieces in one's
     pub fn contains(&self, pc: PieceType, color: Color) -> bool {
         if pc == PieceType::Pawn {
-            for piece in self.iter_pawns(color) {
+            for piece in self.iter_pawns(color).filter(|p| p.position != None) {
                 if piece.color == color && piece.piecetype == pc {
                     return true;
                 }
             }
         } else {
-            for piece in self.iter_pieces(color) {
+            for piece in self.iter_pieces(color).filter(|p| p.position != None) {
                 if piece.color == color && piece.piecetype == pc {
                     return true;
                 }
@@ -377,7 +378,7 @@ impl Board {
         }
     }
 
-    ///a central symmetry is needed
+    ///centrally rotate the board
     pub fn flip(&mut self) {
         let mut tmp: Vec<(Piece, Piece)> = Vec::new();
         for piece in self.iter() {

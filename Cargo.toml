@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/michaelb/shogai"
 license = "GPL-3.0"
 keywords = ["shogi", "helper", "engine", "shogiban", "board"]
-categories = ["game-development","game-engine","games"]
+categories = ["game-development","game-engines","games"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

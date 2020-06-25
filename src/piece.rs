@@ -43,7 +43,7 @@ pub enum PieceType {
 }
 
 impl Piece {
-    ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers. values of
+    ///I use the piece valuation from YSS 7.0 (1997), but scaled x100 to be integers.
     pub fn value(&self) -> i32 {
         match self.piecetype {
             PieceType::Pawn => {
