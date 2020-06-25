@@ -1,6 +1,6 @@
 [package]
 name = "shogai"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Bleuez Michael <michael.bleuez2@gmail.com>"]
 edition = "2018"
 description = "A shogi helper"
