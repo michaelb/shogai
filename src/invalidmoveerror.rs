@@ -322,9 +322,14 @@ pub fn check_move_possible_after_drop<'a>(
 
 ///check if promotion (or absence of promotion) is allowed
 pub fn check_promotion<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, InvalidMoveError> {
+    let full_move: Movement = mv.parse().unwrap();
     if !maybe_normal_move(mv) {
-        //move not a normal move but a drop so no check
-        return Ok(mv);
+        //it's a drop
+        if full_move.promotion {
+            return Err(InvalidMoveError::PromotionError);
+        } else {
+            return Ok(mv);
+        }
     }
     let last_row;
     let before_last_row;
@@ -338,7 +343,6 @@ pub fn check_promotion<'a>(mv: &'a str, b: &'a Board) -> Result<&'a str, Invalid
         before_last_row = 'b';
         third_row = 'c';
     }
-    let full_move: Movement = mv.parse().unwrap();
 
     //cannot promote gold or king
     if full_move.promotion
