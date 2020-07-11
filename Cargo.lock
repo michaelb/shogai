@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "shogai"
-version = "1.0.1"
+version = "2.0.0"
 dependencies = [
  "arrayvec",
  "rand",

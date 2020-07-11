@@ -1,6 +1,7 @@
 # shogai
 
-a rust interface for shogi engines
+a rust interface for shogi engines (with simple shogi engine capabilities)
+![](human-vs-stupid-computer.gif)
 
 ## What it is
 
@@ -18,12 +19,14 @@ I mean, you can do a shogi engine in a few lines (see ai::greedy) with the help 
 DISCLAIMER:
 I do not have a way to compare performance with other shogi engines, as implementing a shogi engine is a completely different story, tons of if/elses branches etc...
 
-If you are interested in building your own "high-perf" shogi engine in rust, you can use this helper to fasten development. You may have to redo some parts yourself is performance is not up to your expectations.
+If you are interested in building your own "high-perf" shogi engine in rust, you can use this helper to fasten development. You may have to redo some parts yourself if performance is not up to your expectations.
 Advantages of using shogai ?:
 
 - CLI interface? Done
 - move-checking (in case you are not 100% sure of yours)? Done
 - Simple structure for pieces, position, movements with parsing? Done
+
+Draw conditions are not managed.
 
 ## Installation
 
@@ -46,7 +49,7 @@ The structure of your basic shogi program should look like this:
 - loop
 - - read, get, generate ... a move ( as &str)
 - - play the move
-- - check if the game is over (usually a checkmate)
+- - check if the game is over
 
 ## Contributing
 

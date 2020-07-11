@@ -9,12 +9,14 @@ use std::iter::once;
 #[derive(Debug, Clone, PartialEq, Eq, Copy, Hash)]
 pub struct Rules {
     pub can_uncover_check: bool,
+    pub can_restart: bool,
 }
 
 impl Default for Rules {
     fn default() -> Self {
         Rules {
             can_uncover_check: false,
+            can_restart: false,
         }
     }
 }
@@ -260,9 +262,21 @@ impl Board {
 
     fn play_move_general(&self, mv: &str, check: bool) -> Board {
         let mut new_board = self.clone();
-        if mv == "restart" {
-            println!("restart");
+        if mv == "restart" && self.rules.can_restart {
             return Self::new();
+        }
+        if mv == "withdraw" {
+            if self.get_color() == Color::White {
+                let mut new = self.clone();
+                new.white_pawns.clear();
+                new.white_pieces.clear();
+                return new;
+            } else {
+                let mut new = self.clone();
+                new.black_pawns.clear();
+                new.black_pieces.clear();
+                return new;
+            }
         }
 
         if check {
@@ -311,6 +325,9 @@ impl Board {
     /// Check if a move is 100% valid
     pub fn check_move<'a>(&'a self, mv: &'a str) -> Result<&'a str, InvalidMoveError> {
         // checks should be performed in this order
+        if mv == "withdraw" || (mv == "restart" && self.rules.can_restart) {
+            return Ok(mv);
+        }
         Ok(mv)
             .and_then(check_syntax)
             .and_then(check_in_board)
@@ -340,6 +357,9 @@ impl Board {
         if complete_check {
             return self.check_move(mv);
         } else {
+            if mv == "withdraw" || (mv == "restart" && self.rules.can_restart) {
+                return Ok(mv);
+            }
             return Ok(mv)
                 .and_then(check_syntax)
                 .and_then(check_in_board)
@@ -562,7 +582,6 @@ impl Board {
                     end: Position(i),
                     promotion: false,
                     force_capture: false,
-                    offer_draw: false,
                     withdraw: false,
                     restart: false,
                 };

@@ -13,7 +13,6 @@ pub struct Movement {
     pub end: Position,
     pub promotion: bool,
     pub force_capture: bool,
-    pub offer_draw: bool,
     pub withdraw: bool,
     pub restart: bool,
 }
@@ -30,7 +29,6 @@ impl Movement {
             ),
             promotion: false,
             force_capture: false,
-            offer_draw: false,
             withdraw: false,
             restart: false,
         };
@@ -43,7 +41,6 @@ impl Movement {
             ),
             promotion: true,
             force_capture: false,
-            offer_draw: false,
             withdraw: false,
             restart: false,
         };
@@ -57,8 +54,6 @@ impl fmt::Display for Movement {
             write!(f, "restart")
         } else if self.withdraw {
             write!(f, "withdraw")
-        } else if self.offer_draw {
-            write!(f, "offer draw")
         } else if self.start == None {
             //is a drop move
             write!(
@@ -104,7 +99,6 @@ impl FromStr for Movement {
                 end: Position(0),
                 promotion: false,
                 force_capture: false,
-                offer_draw: false,
                 withdraw: false,
                 restart: true,
             });
@@ -116,20 +110,7 @@ impl FromStr for Movement {
                 end: Position(0),
                 promotion: false,
                 force_capture: false,
-                offer_draw: false,
                 withdraw: true,
-                restart: false,
-            });
-        }
-        if s == "offer_draw" {
-            return Ok(Movement {
-                piecetype: PieceType::Pawn,
-                start: None,
-                end: Position(0),
-                promotion: false,
-                force_capture: false,
-                offer_draw: true,
-                withdraw: false,
                 restart: false,
             });
         }
@@ -164,7 +145,6 @@ impl FromStr for Movement {
                 end: p2,
                 promotion: pr,
                 force_capture: fc,
-                offer_draw: false,
                 withdraw: false,
                 restart: false,
             })
@@ -178,7 +158,6 @@ impl FromStr for Movement {
                 end: p1,
                 promotion: pr,
                 force_capture: false,
-                offer_draw: false,
                 withdraw: false,
                 restart: false,
             })
@@ -201,7 +180,6 @@ mod test {
                         end: Position(end),
                         promotion: pr,
                         force_capture: true,
-                        offer_draw: false,
                         withdraw: false,
                         restart: false,
                     };

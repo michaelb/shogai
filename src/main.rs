@@ -16,11 +16,9 @@ fn main() {
 
         let mv;
         if b.get_turn() {
-            // mv = ai::get_move_from_human(&b);
-            mv = ai::greedy(&b);
+            mv = ai::get_move_from_human(&b);
         } else {
             mv = ai::greedy(&b);
-            // mv = ai::get_move_from_human(&b);
         }
 
         println!("{:?} has chosen the move: {}", b.get_color(), mv);
