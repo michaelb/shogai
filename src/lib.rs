@@ -104,6 +104,9 @@ pub mod invalidmoveerror;
 ///
 ///However, origin must always be written! (implicit start position not allowed)
 ///
+///Additional moves are (without the quotes): "withdraw" and "restart", although you will have to
+///enable the later in the board's rules
+///
 ///
 ///If a opponent's piece is taken, the move *can*, *optionnaly*, be written as (eg) P1gx1f (note the x instead of the -). This will ensure an extra
 ///check to make sure there is a opponent piece there.
