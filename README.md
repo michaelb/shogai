@@ -1,6 +1,8 @@
 # shogai
 
 a rust interface for shogi engines (with simple shogi engine capabilities)
+
+Should be used as a library, but the demo (code in main.rs) is playable, as you can see below (me vs a stupid bot)
 ![Me playing against a simple bot](demo.gif)
 
 ## What it is
