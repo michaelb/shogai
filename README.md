@@ -1,7 +1,7 @@
 # shogai
 
 a rust interface for shogi engines (with simple shogi engine capabilities)
-![](human-vs-stupid-computer.gif)
+![Me playing against a simple bot](demo.gif)
 
 ## What it is
 
