@@ -173,7 +173,6 @@ impl Board {
             return self.contains(PieceType::King, self.get_color());
         }
 
-        let mut can_always_take_the_king = true;
         for my_possible_move in self.iter_moves_partial_check() {
             let board_before_next = self.play_move_unchecked(&my_possible_move);
             let mut have_move_that_take_the_king = false;
@@ -184,9 +183,11 @@ impl Board {
                     have_move_that_take_the_king = true;
                 }
             }
-            can_always_take_the_king &= have_move_that_take_the_king;
+            if !have_move_that_take_the_king {
+                return false;
+            }
         }
-        return can_always_take_the_king;
+        return true;
     }
 
     ///return whether the board (not the reserve) contains a piece of given type and color
